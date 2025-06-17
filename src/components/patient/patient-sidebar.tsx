@@ -25,6 +25,7 @@ import {
   Users,
 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import BrandImage from "../../../public/brand-01.png";
 import BrandImageSquare from "../../../public/brand-4x4.png";
 interface PatientSidebarProps {
@@ -71,7 +72,7 @@ export function PatientSidebar({
 }: PatientSidebarProps) {
   const { toggleSidebar, open } = useSidebar();
   const isOpen = open;
-
+  const router = useRouter();
   return (
     <Sidebar
       className="border-r border-slate-200 bg-white transition-all duration-300"
@@ -179,10 +180,16 @@ export function PatientSidebar({
       </SidebarContent>
 
       <SidebarFooter className="border-t border-slate-100 p-4">
-        <SidebarMenuButton>
+        <SidebarMenuButton
+          tooltip={!isOpen ? "Back to home" : undefined}
+          onClick={() => {
+            //route to home page
+            router.push("/");
+          }}
+        >
           <div className="flex items-center justify-center">
-            <ArrowLeft className="h-4 w-4 text-slate-400" />
-            <span className="text-sm">Back to home</span>
+            <ArrowLeft className="h-4 w-4 text-slate-400 mr-2" />
+            {isOpen && <span className="text-xs">Back to home</span>}
           </div>
         </SidebarMenuButton>
         <SidebarMenu>
