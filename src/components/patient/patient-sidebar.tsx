@@ -161,9 +161,6 @@ export function PatientSidebar({
                       <div className="font-medium text-sm truncate">
                         {item.title}
                       </div>
-                      <div className="text-xs text-slate-500 truncate">
-                        {item.description}
-                      </div>
                     </div>
                   )}
                   {/* {item.id === "er-session" && isOpen && (
