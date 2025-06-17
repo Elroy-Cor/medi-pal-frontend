@@ -19,7 +19,7 @@ import {
   MapPin,
   User,
 } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 
 interface MedicalVisit {
   id: string;
@@ -189,7 +189,7 @@ export function MedicalHistoryPage() {
             </TableHeader>
             <TableBody>
               {mockVisits.map((visit, id) => (
-                <div key={id}>
+                <Fragment key={id}>
                   <TableRow
                     key={visit.id}
                     className="cursor-pointer hover:bg-slate-50 transition-colors border-slate-100"
@@ -273,7 +273,7 @@ export function MedicalHistoryPage() {
                       </TableCell>
                     </TableRow>
                   )}
-                </div>
+                </Fragment>
               ))}
             </TableBody>
           </Table>
