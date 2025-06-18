@@ -2,6 +2,7 @@ import { ResearchFindings } from "@/components/main-page/research-findings";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import medipalLogo from "@/public/brand-01.png";
 import {
   Brain,
   CheckCircle,
@@ -13,7 +14,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import medipalLogo from "../../public/brand-01.png";
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">

@@ -14,6 +14,8 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
+import BrandImage from "@/public/brand-01.png";
+import BrandImageSquare from "@/public/brand-4x4.png";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -27,8 +29,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import BrandImage from "../../../public/brand-01.png";
-import BrandImageSquare from "../../../public/brand-4x4.png";
 interface PatientSidebarProps {
   currentPage: PageType;
   onPageChange: (page: PageType) => void;

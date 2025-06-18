@@ -42,6 +42,8 @@ export function ChatPage() {
   const [partialTranscript, setPartialTranscript] = useState("");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [connectionState, setConnectionState] = useState("disconnected");
+  const [isAiResponding, setIsAiResponding] = useState(false);
+  const [isFunctionCallLoading, setIsFunctionCallLoading] = useState(false);
 
   // WebRTC refs for voice mode
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -147,6 +149,15 @@ export function ChatPage() {
   ) => {
     console.log("OpenAI wants to call function:", eventData);
 
+    // Set loading state
+    setIsFunctionCallLoading(true);
+
+    // Add a system message to show function call is in progress
+    addMessage(
+      `🔄 Loading data from ${eventData.name.replace(/_/g, " ")}...`,
+      "system"
+    );
+
     try {
       const parsedArgs = JSON.parse(eventData.arguments);
       const query = parsedArgs.query;
@@ -221,6 +232,12 @@ export function ChatPage() {
     } catch (error) {
       console.error("Function call error:", error);
 
+      // Add error message
+      addMessage(
+        `❌ Error loading data: ${(error as Error).message}`,
+        "system"
+      );
+
       // Send error back to OpenAI
       dataChannel.send(
         JSON.stringify({
@@ -241,6 +258,9 @@ export function ChatPage() {
           type: "response.create",
         })
       );
+    } finally {
+      // Always clear loading state
+      setIsFunctionCallLoading(false);
     }
   };
 
@@ -313,15 +333,31 @@ export function ChatPage() {
           ) {
             addMessage(data.transcript, "user", "voice");
           } else if (data.type === "response.audio_transcript.delta") {
+            // AI is actively responding
+            if (!isAiResponding) {
+              setIsAiResponding(true);
+            }
             setPartialTranscript((prev) => prev + data.delta);
           } else if (data.type === "response.audio_transcript.done") {
             addMessage(data.transcript, "ai", "voice");
             setPartialTranscript("");
+            setIsAiResponding(false); // AI finished responding
           } else if (data.type === "input_audio_buffer.speech_started") {
-            setIsListening(true);
-            setPartialTranscript("");
+            // Only allow listening if AI is not responding and no function call is loading
+            if (!isAiResponding && !isFunctionCallLoading) {
+              setIsListening(true);
+              setPartialTranscript("");
+            }
           } else if (data.type === "input_audio_buffer.speech_stopped") {
             setIsListening(false);
+          } else if (data.type === "response.audio.delta") {
+            // AI started generating audio response
+            if (!isAiResponding) {
+              setIsAiResponding(true);
+            }
+          } else if (data.type === "response.audio.done") {
+            // AI finished audio response
+            setIsAiResponding(false);
           }
         } catch (error) {
           console.error("Error parsing data channel message:", error);
@@ -389,8 +425,10 @@ export function ChatPage() {
       await pc.setRemoteDescription({ type: "answer", sdp: answerSDP });
 
       setIsVoiceMode(true);
+      setIsListening(false); // Ensure consistent initial state
+      setIsAiResponding(false); // Ensure consistent initial state
       addMessage(
-        "Connected! Start speaking... I can help with insurance, medical history, or medical reports!",
+        "🎤 Connected! Start speaking... I can help with insurance, medical history, or medical reports!",
         "system",
         "voice"
       );
@@ -407,33 +445,48 @@ export function ChatPage() {
   // Stop real-time conversation
   const stopRealtimeConversation = () => {
     console.log("Stopping realtime conversation...");
+
+    // Reset all states first
     setIsVoiceMode(false);
     setIsListening(false);
+    setIsAiResponding(false);
+    setIsFunctionCallLoading(false);
     setPartialTranscript("");
     setConnectionState("disconnected");
 
+    // Stop and cleanup audio stream
     if (audioStreamRef.current) {
+      console.log("Stopping audio tracks...");
       audioStreamRef.current.getTracks().forEach((track) => {
+        console.log(
+          `Stopping track: ${track.kind}, state: ${track.readyState}`
+        );
         track.stop();
       });
       audioStreamRef.current = null;
     }
 
+    // Close data channel
     if (dataChannelRef.current) {
+      console.log("Closing data channel...");
       dataChannelRef.current.close();
       dataChannelRef.current = null;
     }
 
+    // Close peer connection
     if (peerConnectionRef.current) {
+      console.log("Closing peer connection...");
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
     }
 
+    // Clear audio player
     if (audioPlayerRef.current) {
       audioPlayerRef.current.srcObject = null;
+      audioPlayerRef.current.pause();
     }
 
-    addMessage(" Voice mode disconnected", "system", "voice");
+    addMessage("🔇 Voice mode disconnected", "system", "voice");
   };
 
   // Handle text message sending (for non-voice mode)
@@ -655,7 +708,7 @@ export function ChatPage() {
         }}
       >
         <CardContent className="p-4 h-full overflow-hidden">
-          <div className="h-full overflow-y-auto space-y-6 pr-2 max-h-[calc(100vh-24rem)]">
+          <div className="h-full overflow-y-auto space-y-2 pr-2 max-h-[calc(100vh-24rem)]">
             {messages.map((message) =>
               message.hasButtons ? (
                 <div key={message.id} className="flex justify-start">
@@ -755,12 +808,16 @@ export function ChatPage() {
 
                       {/* User messages */}
                       {message.sender === "user" && (
-                        <p className="leading-relaxed">{message.text}</p>
+                        <p className="leading-relaxed text-sm">
+                          {message.text}
+                        </p>
                       )}
 
                       {/* System messages */}
                       {message.sender === "system" && (
-                        <p className="leading-relaxed">{message.text}</p>
+                        <p className="leading-relaxed text-sm">
+                          {message.text}
+                        </p>
                       )}
 
                       {/* AI messages */}
@@ -806,7 +863,11 @@ export function ChatPage() {
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder={
                   isVoiceMode
-                    ? isListening
+                    ? isFunctionCallLoading
+                      ? "Loading data from backend, please wait..."
+                      : isAiResponding
+                      ? "AI is responding, please wait..."
+                      : isListening
                       ? "Listening..."
                       : "Voice mode active - speak or type..."
                     : "Type your message about insurance, medical history, or health questions..."
@@ -814,13 +875,30 @@ export function ChatPage() {
                 onKeyPress={(e) =>
                   e.key === "Enter" && !isVoiceMode && handleSendMessage()
                 }
-                disabled={isVoiceMode && isListening}
+                disabled={
+                  isVoiceMode &&
+                  (isListening || isAiResponding || isFunctionCallLoading)
+                }
                 className="h-12 px-4 rounded-xl border-slate-200 focus:border-blue-300 focus:ring-blue-100"
               />
-              {isListening && (
+              {(isListening || isAiResponding || isFunctionCallLoading) && (
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  <div className="animate-pulse">
-                    <Mic className="h-5 w-5 text-green-500" />
+                  <div
+                    className={
+                      isFunctionCallLoading
+                        ? "animate-spin"
+                        : isAiResponding
+                        ? "animate-bounce"
+                        : "animate-pulse"
+                    }
+                  >
+                    {isFunctionCallLoading ? (
+                      <Activity className="h-5 w-5 text-orange-500" />
+                    ) : isAiResponding ? (
+                      <Volume2 className="h-5 w-5 text-blue-500" />
+                    ) : (
+                      <Mic className="h-5 w-5 text-green-500" />
+                    )}
                   </div>
                 </div>
               )}
