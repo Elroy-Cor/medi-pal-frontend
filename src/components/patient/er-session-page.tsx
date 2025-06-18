@@ -3,32 +3,29 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
   AlertTriangle,
   CheckCircle,
   Circle,
   Clock,
-  FileText,
   MapPin,
   QrCode,
   Scan,
-  Stethoscope,
-  User,
 } from "lucide-react";
 import { useEffect } from "react";
-import { useAtom } from 'jotai';
+import { useAtom } from "jotai";
 import {
   sessionStartedAtom,
   currentStepIndexAtom,
   erStepsAtom,
   startERSession,
   progressToNextStep,
-  type ERStep,
   DEFAULT_ER_STEPS
 } from '@/store/er-session';
 
 export function ERSessionPage() {
-  const [sessionStarted, setSessionStarted] = useAtom(sessionStartedAtom);
+  const [sessionStarted] = useAtom(sessionStartedAtom);
   const [currentStepIndex] = useAtom(currentStepIndexAtom);
   const [steps] = useAtom(erStepsAtom);
   const [, startSession] = useAtom(startERSession);
@@ -43,7 +40,7 @@ export function ERSessionPage() {
 
       return () => clearInterval(interval);
     }
-  }, [sessionStarted, steps]);
+  }, [sessionStarted, progressStep]);
 
   const handleScanQR = () => {
     startSession();
@@ -62,7 +59,7 @@ export function ERSessionPage() {
     }
   };
 
-  const getStepIcon = (step: any, index: number) => {
+  const getStepIcon = (step: { status: string; icon: React.ComponentType<{ className?: string }> }) => {
     const IconComponent = step.icon;
     if (step.status === "completed") {
       return <CheckCircle className="h-5 w-5 text-green-600" />;
@@ -256,99 +253,52 @@ export function ERSessionPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {steps.map((step, index) => {
+            {steps.map((step) => {
               const isCompleted = step.status === "completed";
-              const isCurrent = step.status === "in-progress";
-              const isUpcoming = step.status === "upcoming";
+              const isInProgress = step.status === "in-progress";
 
               return (
                 <div
                   key={step.id}
-                  className={`flex items-start gap-4 p-4 rounded-lg border-2 transition-all ${
-                    isCurrent
+                  className={`p-4 rounded-lg border ${
+                    isInProgress
                       ? "border-blue-200 bg-blue-50"
                       : isCompleted
                       ? "border-green-200 bg-green-50"
                       : "border-gray-200 bg-gray-50"
                   }`}
                 >
-                  <div className="flex-shrink-0 mt-1">
-                    {getStepIcon(step, index)}
-                  </div>
-                  <div className="flex-grow">
-                    <div className="flex items-center justify-between">
-                      <h3
-                        className={`font-semibold ${
-                          isCurrent
-                            ? "text-blue-800"
-                            : isCompleted
-                            ? "text-green-800"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        {step.title}
-                      </h3>
-                      <Badge className={getStepStatusColor(step.status)}>
-                        {step.status === "in-progress"
-                          ? "Current"
-                          : step.status === "completed"
-                          ? "Done"
-                          : "Upcoming"}
-                      </Badge>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-1">
+                      {getStepIcon(step)}
                     </div>
-                    <p
-                      className={`text-sm mt-1 ${
-                        isCurrent
-                          ? "text-blue-700"
-                          : isCompleted
-                          ? "text-green-700"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      {step.description}
-                    </p>
-
-                    {/* Show additional details for current and next step */}
-                    {isCurrent && (
-                      <div className="mt-3 p-3 bg-white rounded border border-blue-200">
-                        <h4 className="font-medium text-blue-800 mb-2">
-                          What's happening now:
-                        </h4>
-                        <p className="text-sm text-blue-700">
-                          {step.id === "triage" &&
-                            "A nurse will check your vital signs, ask about your symptoms, and assign a priority level based on the severity of your condition."}
-                          {step.id === "waiting-room" &&
-                            "You'll wait in the designated area until a doctor becomes available. Wait times vary based on your priority level and current patient load."}
-                          {step.id === "examination" &&
-                            "The doctor will examine you, review your symptoms, and may order additional tests like blood work, X-rays, or other diagnostic procedures."}
-                          {step.id === "treatment" &&
-                            "Based on your diagnosis, you'll receive appropriate treatment which may include medication, procedures, or observation."}
-                          {step.id === "discharge" &&
-                            "The medical team will review your test results, provide discharge instructions, prescriptions if needed, and schedule any follow-up appointments."}
-                        </p>
+                    <div className="flex-grow">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold">{step.title}</h3>
+                        <Badge
+                          className={getStepStatusColor(step.status)}
+                        >
+                          {step.status}
+                        </Badge>
                       </div>
-                    )}
-
-                    {/* Show preview for next step */}
-                    {index === currentStepIndex + 1 && (
-                      <div className="mt-3 p-3 bg-gray-50 rounded border border-gray-200">
-                        <h4 className="font-medium text-gray-700 mb-2">
-                          Coming up next:
-                        </h4>
-                        <p className="text-sm text-gray-600">
-                          {step.id === "triage" &&
-                            "Quick assessment to prioritize your care"}
-                          {step.id === "waiting-room" &&
-                            "Comfortable waiting area while we prepare for your examination"}
-                          {step.id === "examination" &&
-                            "Thorough medical evaluation by our emergency doctor"}
-                          {step.id === "treatment" &&
-                            "Personalized treatment plan based on your diagnosis"}
-                          {step.id === "discharge" &&
-                            "Final review and instructions for your continued care"}
-                        </p>
-                      </div>
-                    )}
+                      <p className="text-gray-600 text-sm">
+                        {step.description}
+                      </p>
+                      {step.status === "in-progress" && (
+                        <div className="mt-2">
+                          <div className="text-xs text-blue-600 mb-1">
+                            In progress...
+                          </div>
+                          <Progress value={65} className="h-2" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-shrink-0 text-sm text-gray-500">
+                      {isCompleted && "✓ Complete"}
+                      {isInProgress && (
+                        <Badge variant="secondary">Active</Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
