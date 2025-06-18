@@ -112,7 +112,7 @@ export function ContactDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-fit max-h-[90vh] overflow-y-auto">
+      <DialogContent className="min-w-1/2 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
