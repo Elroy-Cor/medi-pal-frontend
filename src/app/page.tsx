@@ -446,10 +446,16 @@ export default function LandingPage() {
           </p>
           <div style={{ paddingTop: '56.25%', position: 'relative' }}>
             <iframe
-              src="https://player.vimeo.com/video/1094540664?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
-              allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
-              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-              title="medipal-vid"
+              src='https://player.vimeo.com/video/1094540664?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479'
+              allow='autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share'
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+              }}
+              title='medipal-vid'
             ></iframe>
           </div>
         </div>
@@ -477,30 +483,31 @@ export default function LandingPage() {
               whileInView='visible'
               viewport={{ once: true, amount: 0.5 }}
               variants={staggerContainerVariants}
-              className='flex flex-col sm:flex-row gap-4 justify-center'
+              className='flex flex-row gap-4 justify-center'
             >
-              <motion.div variants={fadeUpStaggerVariants}>
-                <Link href='/patient'>
-                  <Button
-                    size='lg'
-                    variant='secondary'
-                    className='bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300'
-                  >
-                    <Users className='w-5 h-5 mr-2' />
-                    Patient Experience
-                  </Button>
-                </Link>
-              </motion.div>
               <motion.div variants={fadeUpStaggerVariants}>
                 <Link href='/nurse'>
                   <Button
                     size='lg'
                     variant='outline'
-                    className='bg-teal-500/20 border-2 border-teal-400/60 text-teal-100 hover:bg-teal-500/20 hover:border-teal-300 hover:text-white backdrop-blur-sm px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300'
+                    className='border-2 border-cyan-600 text-cyan-700 hover:text-cyan-600 hover:border-cyan-500 hover:border-2  w-60 h-12 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300'
                   >
                     <Shield className='w-5 h-5 mr-2' />
                     Healthcare Dashboard
                   </Button>
+                </Link>
+              </motion.div>
+              <motion.div variants={fadeUpStaggerVariants}>
+                <Link href='/patient'>
+                  <div className='w-full relative inline-flex group items-center shadow-none rounded-lg'>
+                    {/* Button glow */}
+                    <div className='absolute z-10 -inset-0.5 opacity-100 bg-gradient-to-r from-emerald-200 via-cyan-200 to-cyan-300 rounded-lg blur-sm group-hover:opacity-100 group-hover:-inset-1.5 group-hover:blur-md group-hover:animate-pulse transition-all duration-300'></div>
+                    {/* Patients */}
+                    <Button className='z-20 bg-gradient-to-br from-cyan-600 via-emerald-500 to-cyan-800 text-white w-60 h-12 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer'>
+                      <Users className='w-5 h-5 mr-2' />
+                      Patients Access
+                    </Button>
+                  </div>
                 </Link>
               </motion.div>
             </motion.div>
@@ -526,22 +533,22 @@ export default function LandingPage() {
               committed to improving patient care through technology
             </p>
           </div>
-            <motion.div
-              initial='hidden'
-              whileInView='visible'
-              viewport={{ once: true, amount: 0.2 }}
-              variants={fadeUpStaggerVariants}
-              className='bg-transparent text-center'
-            >
-              {/* single team pic */}
-              <Image
-                src={teamPic}
-                alt='Team Medipal'
-                width={1280}
-                height={580}
-                className='w-full rounded-lg'
-              />
-            </motion.div>
+          <motion.div
+            initial='hidden'
+            whileInView='visible'
+            viewport={{ once: true, amount: 0.2 }}
+            variants={fadeUpStaggerVariants}
+            className='bg-transparent text-center'
+          >
+            {/* single team pic */}
+            <Image
+              src={teamPic}
+              alt='Team Medipal'
+              width={1280}
+              height={580}
+              className='w-full rounded-lg'
+            />
+          </motion.div>
         </div>
       </motion.section>
 
