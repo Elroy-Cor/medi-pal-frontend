@@ -41,11 +41,16 @@ export function AIChat({
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  if (!isOpen) return null;
-
   // Helper function to ensure timestamp is a Date object
   const ensureDate = (timestamp: Date | string): Date => {
     return timestamp instanceof Date ? timestamp : new Date(timestamp);
+  };
+
+  const getTimeOfDay = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'morning';
+    if (hour < 18) return 'afternoon';
+    return 'evening';
   };
 
   // Clear messages and session storage
@@ -91,13 +96,6 @@ export function AIChat({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  const getTimeOfDay = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'morning';
-    if (hour < 18) return 'afternoon';
-    return 'evening';
-  };
 
   const addMessage = (text: string, sender: 'user' | 'ai') => {
     const newMessage: Message = {
@@ -192,6 +190,9 @@ export function AIChat({
       }
     }, 1000);
   };
+
+  // Move the conditional return AFTER all hooks
+  if (!isOpen) return null;
 
   return (
     <div className='fixed bottom-24 right-6 w-96 h-[600px] bg-white rounded-lg shadow-2xl border border-gray-200 z-40 flex flex-col'>

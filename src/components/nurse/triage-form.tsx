@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -43,7 +43,6 @@ import { PatientSearch } from './nurse-patient-search';
 import { motion } from 'motion/react';
 // toast/sonner
 import { useToast } from '@/hooks/use-toast';
-import { Toaster } from '@/components/ui/toaster';
 
 export type PatientData = {
   name: string;
@@ -287,7 +286,7 @@ export function TriageForm({
   const inputRefs = useRef<Record<string, HTMLElement | null>>({});
 
   // Define the voice simulation sequence
-  const voiceSimulationSteps = [
+  const voiceSimulationSteps = useMemo(() => [
     {
       field: 'complaint',
       value: 'Severe chest pain radiating to left arm, started 30 minutes ago',
@@ -348,7 +347,7 @@ export function TriageForm({
       delay: 1000,
       message: 'Medical history: Hypertension, diabetes',
     },
-  ];
+  ], []);
 
   // Helper function to set refs
   const setInputRef = (field: string) => (el: HTMLElement | null) => {
@@ -427,7 +426,7 @@ export function TriageForm({
     }, currentStep.delay);
 
     return () => clearTimeout(timer);
-  }, [isVoiceActive, voiceSimulationStep]);
+  }, [isVoiceActive, voiceSimulationStep, voiceSimulationSteps]);
 
   // Handle voice triage click
   const handleVoiceTriageClick = () => {

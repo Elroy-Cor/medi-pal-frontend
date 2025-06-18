@@ -94,9 +94,9 @@ export default function LandingPage() {
               Transforming Emergency Department Experience
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Long wait times shouldn't mean patients feel abandoned. Our AI
+              Long wait times shouldn&apos;t mean patients feel abandoned. Our AI
               companion bridges the gap when clinical staff are busy and
-              families can't be present.
+              families can&apos;t be present.
             </p>
           </div>
 
@@ -202,7 +202,7 @@ export default function LandingPage() {
                   </h3>
                   <p className="text-sm text-gray-600">
                     Peace of mind knowing their loved one is supported and
-                    monitored even when they can't be there
+                    monitored even when they can&apos;t be there
                   </p>
                 </CardContent>
               </Card>

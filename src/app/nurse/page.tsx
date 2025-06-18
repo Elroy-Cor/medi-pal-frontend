@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 // Nurse utils
 import { getPatientStats, randomizePatients } from '@/utils/nurse/nurseUtils';

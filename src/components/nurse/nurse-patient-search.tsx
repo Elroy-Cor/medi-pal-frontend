@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, X, User } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { registeredPatients } from '@/utils/nurse/initialPatients';
 import type { RegisteredPatient } from '@/utils/nurse/nurseTypes';
 
@@ -213,7 +213,7 @@ export function PatientSearch({ onPatientSelect }: PatientSearchProps) {
             <CardContent className='p-4 text-center text-gray-500'>
               <Search className='w-8 h-8 mx-auto mb-2 text-gray-300' />
               <p className='text-sm'>
-                No patients found matching "{searchTerm}"
+                No patients found matching &quot;{searchTerm}&quot;
               </p>
             </CardContent>
           </Card>

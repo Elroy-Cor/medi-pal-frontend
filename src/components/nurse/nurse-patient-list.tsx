@@ -74,27 +74,24 @@ export function PatientList({ patients }: PatientListProps) {
     return <ArrowUpDown className="h-3 w-3 text-gray-400" />
   }
 
-  // Priority order for sorting
-  const priorityOrder = { 'p1': 1, 'p2': 2, 'p3': 3, 'p4': 4, 'p5': 5 }
-  
-  // Sentiment order: positive to negative (1 = most positive, 6 = most negative)
-  const sentimentOrder = { 
-    'good': 1,      // most positive
-    'calm': 2,      // positive
-    'tired': 3,     // neutral/mild negative
-    'restless': 4,  // moderate negative  
-    'distressed': 5, // negative
-    'angry': 6      // most negative
-  }
-
   const sortedPatients = useMemo(() => {
     if (!sortField || !sortDirection) {
       return patients
     }
 
+    // Sentiment order: positive to negative (1 = most positive, 6 = most negative)
+    const sentimentOrder = { 
+      'good': 1,      // most positive
+      'calm': 2,      // positive
+      'tired': 3,     // neutral/mild negative
+      'restless': 4,  // moderate negative  
+      'distressed': 5, // negative
+      'angry': 6      // most negative
+    }
+
     return [...patients].sort((a, b) => {
-      let aValue: any
-      let bValue: any
+      let aValue: string | number
+      let bValue: string | number
 
       switch (sortField) {
         case 'name':
@@ -144,7 +141,7 @@ export function PatientList({ patients }: PatientListProps) {
 
       return 0
     })
-  }, [patients, sortField, sortDirection])
+  }, [patients, sortField, sortDirection]) // Removed sentimentOrder from dependencies
 
   const SortableHeader = ({ field, children, className = "", justify }: { 
     field: SortField, 
@@ -189,7 +186,6 @@ export function PatientList({ patients }: PatientListProps) {
                 <TableRow>
                   <TableHead className="w-[50px]"></TableHead>
                   <SortableHeader field="name">Patient</SortableHeader>
-                  {/* vertical divider */}
                   <SortableHeader field="status">Current Stage</SortableHeader>
                   <SortableHeader field="sentiment">Sentiment</SortableHeader>
                   <SortableHeader field="priority">Priority</SortableHeader>
