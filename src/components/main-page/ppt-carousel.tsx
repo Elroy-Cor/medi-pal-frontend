@@ -17,6 +17,23 @@ import slide1 from '@/public/slides/slides_1.png';
 import slide2 from '@/public/slides/slides_2.png';
 import slide3 from '@/public/slides/slides_3.png';
 import slide4 from '@/public/slides/slides_4.png';
+import slide5 from '@/public/slides/slides_5.png';
+import slide6 from '@/public/slides/slides_6.png';
+import slide7 from '@/public/slides/slides_7.png';
+import slide8 from '@/public/slides/slides_8.png';
+import slide9 from '@/public/slides/slides_9.png';
+import slide10 from '@/public/slides/slides_10.png';
+import slide11 from '@/public/slides/slides_11.png';
+import slide12 from '@/public/slides/slides_12.png';
+import slide13 from '@/public/slides/slides_13.png';
+import slide14 from '@/public/slides/slides_14.png';
+import slide15 from '@/public/slides/slides_15.png';
+import slide16 from '@/public/slides/slides_16.png';
+import slide17 from '@/public/slides/slides_17.png';
+import slide18 from '@/public/slides/slides_18.png';
+import slide19 from '@/public/slides/slides_19.png';
+import slide20 from '@/public/slides/slides_20.png';
+import slide21 from '@/public/slides/slides_21.png';
 
 const fadeUpStaggerVariants: Variants = {
   hidden: {
@@ -38,7 +55,8 @@ export function PresentationSlides() {
   const [current] = useState(0);
 
   // array of images from public/slides
-  const slides = [slide1, slide2, slide3, slide4];
+  const slides = [slide1, slide2, slide3, slide4, slide5, slide6, slide7, slide8, slide9, slide10,
+    slide11, slide12, slide13, slide14, slide15, slide16, slide17, slide18, slide19, slide20, slide21];
 
   return (
     <div className='flex flex-col mx-auto items-center'>
