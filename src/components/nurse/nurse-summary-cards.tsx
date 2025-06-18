@@ -61,11 +61,30 @@ export function SummaryCards({
           </CardContent>
         </Card>
 
-        {/* Critical Patients Card */}
+        {/* Average Wait Time Card */}
         <Card className='h-[80px] sm:h-[80px] sm:col-span-2 lg:col-span-1'>
           <CardContent className='p-2 sm:p-4 h-full'>
             <div className='flex flex-row items-center justify-between h-full'>
               <div className='flex items-center space-x-2'>
+                <Clock className='w-6 h-6 text-teal-600 flex-shrink-0' />
+                <p className='text-xs sm:text-sm font-medium text-gray-600 truncate'>
+                  Avg Wait
+                </p>
+              </div>
+              <p className='text-lg font-bold mt-1 truncate'>
+                {formatTime(avgWaitTime)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Critical Patients Card */}
+        <Card className='h-[80px] sm:h-[80px] sm:col-span-3 lg:col-span-1'>
+          <CardContent className='p-2 sm:p-4 h-full'>
+            <div className='flex flex-row items-center justify-between h-full'>
+              <div className='flex items-center space-x-2'>
+
+
                 <AlertTriangle className='w-6 h-6 text-red-500 flex-shrink-0' />
                 <p className='text-xs sm:text-sm font-medium text-gray-600 truncate'>
                   Critical
@@ -73,23 +92,6 @@ export function SummaryCards({
               </div>
               <p className='text-lg font-bold text-red-500 mt-1'>
                 {criticalPatients}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Average Wait Time Card */}
-        <Card className='h-[80px] sm:h-[80px] sm:col-span-3 lg:col-span-1'>
-          <CardContent className='p-2 sm:p-4 h-full'>
-            <div className='flex flex-row items-center justify-between h-full'>
-              <div className='flex items-center space-x-2'>
-                <Clock className='w-6 h-6 text-teal -600 flex-shrink-0' />
-                <p className='text-xs sm:text-sm font-medium text-gray-600 truncate'>
-                  Avg Wait
-                </p>
-              </div>
-              <p className='text-lg font-bold text-teal -600 mt-1 truncate'>
-                {formatTime(avgWaitTime)}
               </p>
             </div>
           </CardContent>

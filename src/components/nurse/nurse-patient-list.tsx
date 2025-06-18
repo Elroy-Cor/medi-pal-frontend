@@ -16,8 +16,10 @@ import {
   Clock,
   Heart,
   AlertTriangle,
+  ChevronUp,
+  ArrowUpDown,
 } from "lucide-react"
-import React, { useState } from "react"
+import React, { useState, useMemo } from "react"
 import type { Patient } from "@/utils/nurse/nurseTypes"
 import { getSentimentIcon, getSentimentColor, getPriorityColor, getStageIcon } from "@/utils/nurse/nurseUtils"
 import { TreatmentTimeline } from "./nurse-treatment-timeline"
@@ -27,14 +29,139 @@ interface PatientListProps {
   patients: Patient[]
 }
 
+type SortField = 'name' | 'status' | 'sentiment' | 'priority' | 'waitTime' | 'room' | 'age'
+type SortDirection = 'asc' | 'desc' | null
+
 export function PatientList({ patients }: PatientListProps) {
   const [openRows, setOpenRows] = useState<string[]>([])
+  const [sortField, setSortField] = useState<SortField | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null)
 
   const toggleRow = (id: string) => {
     setOpenRows((prev) =>
       prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
     )
   }
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Cycle through: asc -> desc -> null
+      if (sortDirection === 'asc') {
+        setSortDirection('desc')
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null)
+        setSortField(null)
+      } else {
+        setSortDirection('asc')
+      }
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-3 w-3 text-gray-400" />
+    }
+    
+    if (sortDirection === 'asc') {
+      return <ChevronUp className="h-3 w-3 text-blue-600" />
+    } else if (sortDirection === 'desc') {
+      return <ChevronDown className="h-3 w-3 text-blue-600" />
+    }
+    
+    return <ArrowUpDown className="h-3 w-3 text-gray-400" />
+  }
+
+  // Priority order for sorting
+  const priorityOrder = { 'p1': 1, 'p2': 2, 'p3': 3, 'p4': 4, 'p5': 5 }
+  
+  // Sentiment order: positive to negative (1 = most positive, 6 = most negative)
+  const sentimentOrder = { 
+    'good': 1,      // most positive
+    'calm': 2,      // positive
+    'tired': 3,     // neutral/mild negative
+    'restless': 4,  // moderate negative  
+    'distressed': 5, // negative
+    'angry': 6      // most negative
+  }
+
+  const sortedPatients = useMemo(() => {
+    if (!sortField || !sortDirection) {
+      return patients
+    }
+
+    return [...patients].sort((a, b) => {
+      let aValue: any
+      let bValue: any
+
+      switch (sortField) {
+        case 'name':
+          aValue = a.name?.toLowerCase() || ''
+          bValue = b.name?.toLowerCase() || ''
+          break
+        case 'status':
+          aValue = a.status?.toLowerCase() || ''
+          bValue = b.status?.toLowerCase() || ''
+          break
+        case 'sentiment':
+          aValue = sentimentOrder[a.sentiment as keyof typeof sentimentOrder] || 999
+          bValue = sentimentOrder[b.sentiment as keyof typeof sentimentOrder] || 999
+          break
+        case 'priority':
+          // Extract number from priority string (e.g., "P1" -> 1, "P2" -> 2)
+          aValue = a.priority ? parseInt(a.priority.substring(1)) || 999 : 999
+          bValue = b.priority ? parseInt(b.priority.substring(1)) || 999 : 999
+          break
+        case 'waitTime':
+          aValue = a.waitTime || 0
+          bValue = b.waitTime || 0
+          break
+        case 'room':
+          aValue = a.room?.toLowerCase() || ''
+          bValue = b.room?.toLowerCase() || ''
+          break
+        case 'age':
+          aValue = a.age || 0
+          bValue = b.age || 0
+          break
+        default:
+          return 0
+      }
+
+      // Handle string comparison
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        const result = aValue.localeCompare(bValue)
+        return sortDirection === 'asc' ? result : -result
+      }
+
+      // Handle number comparison
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        const result = aValue - bValue
+        return sortDirection === 'asc' ? result : -result
+      }
+
+      return 0
+    })
+  }, [patients, sortField, sortDirection])
+
+  const SortableHeader = ({ field, children, className = "", justify }: { 
+    field: SortField, 
+    children: React.ReactNode,
+    className?: string,
+    justify?: string
+  }) => (
+    <TableHead 
+      className={`cursor-pointer hover:bg-gray-50 select-none transition-colors ${className}`}
+      onClick={() => handleSort(field)}
+    >
+      <div className={`flex items-center ${justify ? justify : 'justify-between'}`}>
+        {children}
+        {getSortIcon(field)}
+      </div>
+    </TableHead>
+  )
 
   return (
     <main className="flex-1 p-6 pt-0">
@@ -46,7 +173,14 @@ export function PatientList({ patients }: PatientListProps) {
                 <Activity className="h-5 w-5 text-blue-600" />
                 Current Patients
               </CardTitle>
-              <p className="text-sm text-gray-600">{patients.length} patients shown</p>
+              <div className="flex items-center gap-4">
+                {sortField && (
+                  <p className="text-xs text-gray-500">
+                    Sorted by {sortField} ({sortDirection === 'asc' ? 'ascending' : 'descending'})
+                  </p>
+                )}
+                <p className="text-sm text-gray-600">{patients.length} patients shown</p>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -54,16 +188,17 @@ export function PatientList({ patients }: PatientListProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50px]"></TableHead>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>Current Stage</TableHead>
-                  <TableHead>Sentiment</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Wait Time</TableHead>
-                  <TableHead className="text-right pr-6">Room</TableHead>
+                  <SortableHeader field="name">Patient</SortableHeader>
+                  {/* vertical divider */}
+                  <SortableHeader field="status">Current Stage</SortableHeader>
+                  <SortableHeader field="sentiment">Sentiment</SortableHeader>
+                  <SortableHeader field="priority">Priority</SortableHeader>
+                  <SortableHeader field="waitTime">Wait Time</SortableHeader>
+                  <SortableHeader field="room" justify="justify-end gap-2" className="text-right pr-6">Room</SortableHeader>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {patients.map((patient) => (
+                {sortedPatients.map((patient) => (
                   <React.Fragment key={patient.id}>
                     <TableRow
                       className="cursor-pointer hover:bg-gray-50 data-[state=open]:bg-gray-100"
