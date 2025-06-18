@@ -16,8 +16,8 @@ export default async function handleFunctionCall(eventData, dataChannel) {
         apiRoute = "/api/medical-history-rag";
         break;
 
-      case "general_medical_rag":
-        apiRoute = "/api/general-medical-rag";
+      case "medical_report_rag":
+        apiRoute = "/api/medical-report-rag";
         break;
 
       default:

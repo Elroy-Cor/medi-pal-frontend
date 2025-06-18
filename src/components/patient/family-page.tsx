@@ -15,38 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NextOfKin } from "@/types";
 import { AlertCircle, Heart, Mail, Phone, Plus, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-interface HospitalStage {
-  stage: string;
-  status: "completed" | "current" | "upcoming";
-  timestamp?: string;
-  description: string;
-  location?: string;
-  doctor?: string;
-  estimatedDuration?: string;
-}
-
-interface NextOfKin {
-  id: string;
-  name: string;
-  relationship: string;
-  phone: string;
-  email: string;
-  address: string;
-  isEmergencyContact: boolean;
-  hospitalStatus: "safe" | "hospitalized" | "unknown";
-  hospitalInfo?: {
-    hospital: string;
-    admissionDate: string;
-    reason: string;
-    currentStage: string;
-    estimatedDischarge?: string;
-    stages: HospitalStage[];
-    emergencyContact?: string;
-    roomNumber?: string;
-  };
-}
 
 export function FamilyPage() {
   const [nextOfKin, setNextOfKin] = useState<NextOfKin[]>(mockNextOfKin);

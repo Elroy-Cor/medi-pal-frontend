@@ -1,3 +1,5 @@
+import { NextOfKin } from "@/types";
+
 const user = {
   name: "Melissa Tan",
   email: "melissa.tan@email.com",
@@ -13,7 +15,7 @@ const user = {
   primaryDoctor: "Dr. Sarah Johnson",
 };
 
-const nextOfKin = [
+const nextOfKin: NextOfKin[] = [
   {
     id: "1",
     name: "Jane Smith",
