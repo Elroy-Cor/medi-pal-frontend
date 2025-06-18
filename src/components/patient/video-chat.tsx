@@ -2,7 +2,7 @@
 
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import * as THREE from "three";
 
 // Type definitions
@@ -50,7 +50,7 @@ function AvatarModel({
   // const [availableAnimations, setAvailableAnimations] = useState<string[]>([]);
 
   // Enhanced phoneme mappings
-  const morphTargetMappings = {
+  const morphTargetMappings = useMemo(() => ({
     A: ["viseme_aa", "mouth_A", "jawOpen", "mouthOpen"],
     B: ["viseme_PP", "mouth_B", "mouthClose", "lipsClosed"],
     C: ["viseme_I", "mouth_C", "mouthSmile", "mouthNarrow"],
@@ -60,10 +60,10 @@ function AvatarModel({
     G: ["viseme_kk", "mouth_G", "mouthLeft", "mouthBack"],
     H: ["viseme_CH", "mouth_H", "mouthShrugLower", "mouthBreathe"],
     X: ["viseme_sil", "mouth_X", "mouthNeutral", "mouthRest", "neutral"],
-  };
+  }), []);
 
   // Body animation fallback for when no morph targets exist
-  const bodyAnimationMappings = {
+  const bodyAnimationMappings = useMemo(() => ({
     A: "TalkingMan01", // Calm speaking
     B: "TalkingMan02", // Emphatic speaking
     C: "TalkingWoman01", // Gentle speaking
@@ -73,7 +73,7 @@ function AvatarModel({
     G: "TalkingWoman01", // Gentle again
     H: "TalkingWoman02", // Animated again
     X: "TalkingMan01", // Default/rest speaking
-  };
+  }), []);
 
   // Animation timing
   useFrame((state, delta) => {
@@ -90,19 +90,21 @@ function AvatarModel({
   const applyMorphTarget = (targetName: string, value: number): boolean => {
     let found = false;
 
-    scene.traverse((child: any) => {
+    scene.traverse((child: THREE.Object3D) => {
       if (
-        child.isSkinnedMesh &&
-        child.morphTargetDictionary &&
-        child.morphTargetInfluences
+        (child as THREE.SkinnedMesh).isSkinnedMesh &&
+        (child as THREE.SkinnedMesh).morphTargetDictionary &&
+        (child as THREE.SkinnedMesh).morphTargetInfluences
       ) {
-        const index = child.morphTargetDictionary[targetName];
+        const skinnedMesh = child as THREE.SkinnedMesh;
+        const index = skinnedMesh.morphTargetDictionary?.[targetName];
         if (
           index !== undefined &&
-          child.morphTargetInfluences[index] !== undefined
+          skinnedMesh.morphTargetInfluences &&
+          skinnedMesh.morphTargetInfluences[index] !== undefined
         ) {
-          child.morphTargetInfluences[index] = THREE.MathUtils.lerp(
-            child.morphTargetInfluences[index],
+          skinnedMesh.morphTargetInfluences[index] = THREE.MathUtils.lerp(
+            skinnedMesh.morphTargetInfluences[index],
             value,
             0.2
           );
@@ -116,11 +118,12 @@ function AvatarModel({
 
   // Reset all morph targets
   const resetAllMorphTargets = () => {
-    scene.traverse((child: any) => {
-      if (child.isSkinnedMesh && child.morphTargetInfluences) {
-        for (let i = 0; i < child.morphTargetInfluences.length; i++) {
-          child.morphTargetInfluences[i] = THREE.MathUtils.lerp(
-            child.morphTargetInfluences[i],
+    scene.traverse((child: THREE.Object3D) => {
+      const skinnedMesh = child as THREE.SkinnedMesh;
+      if ((child as THREE.SkinnedMesh).isSkinnedMesh && skinnedMesh.morphTargetInfluences) {
+        for (let i = 0; i < skinnedMesh.morphTargetInfluences.length; i++) {
+          skinnedMesh.morphTargetInfluences[i] = THREE.MathUtils.lerp(
+            skinnedMesh.morphTargetInfluences[i],
             0,
             0.1
           );
@@ -136,9 +139,6 @@ function AvatarModel({
 
     if (actions && animationName && actions[animationName]) {
       // Only change animation if it's different from what's currently playing
-      const currentAnimation = Object.values(actions).find((action) =>
-        action.isRunning()
-      );
       const targetAction = actions[animationName];
 
       // If the target animation is already running, don't restart it
@@ -148,8 +148,8 @@ function AvatarModel({
 
       // Fade out all other animations
       Object.values(actions).forEach((action) => {
-        if (action !== targetAction && action.isRunning()) {
-          action.fadeOut(0.5);
+        if (action !== targetAction && action?.isRunning()) {
+          action?.fadeOut(0.5);
         }
       });
 
@@ -178,25 +178,21 @@ function AvatarModel({
       let foundMorphTargets = false;
       const allMorphTargets = new Set<string>();
 
-      scene.traverse((child: any) => {
-        if (child.isSkinnedMesh && child.morphTargetDictionary) {
+      scene.traverse((child: THREE.Object3D) => {
+        const skinnedMesh = child as THREE.SkinnedMesh;
+        if (skinnedMesh.isSkinnedMesh && skinnedMesh.morphTargetDictionary) {
           foundMorphTargets = true;
           console.log(
             `📝 Found morph targets on "${child.name}":`,
-            Object.keys(child.morphTargetDictionary)
+            Object.keys(skinnedMesh.morphTargetDictionary)
           );
-          Object.keys(child.morphTargetDictionary).forEach((key) =>
+          Object.keys(skinnedMesh.morphTargetDictionary).forEach((key) =>
             allMorphTargets.add(key)
           );
         }
       });
 
       setHasMorphTargets(foundMorphTargets);
-
-      // Check available animations
-      // const animNames = animations.map((anim: any) => anim.name);
-      // setAvailableAnimations(animNames);
-      // console.log("🎬 Available animations:", animNames);
 
       if (foundMorphTargets) {
         console.log(
@@ -222,14 +218,14 @@ function AvatarModel({
         );
 
         // Check which animations we can use
-        const animNames = animations.map((anim: any) => anim.name);
+        const animNames = animations.map((anim: THREE.AnimationClip) => anim.name);
         Object.entries(bodyAnimationMappings).forEach(([phoneme, animName]) => {
           const available = animNames.includes(animName);
           console.log(`  ${phoneme} → ${animName}: ${available ? "✅" : "❌"}`);
         });
       }
     }
-  }, [scene, animations]);
+  }, [scene, animations, morphTargetMappings, bodyAnimationMappings]);
 
   // Set up idle animation
   useEffect(() => {
@@ -357,81 +353,81 @@ function AvatarModel({
       {nodes.Wolf3D_Body && (
         <skinnedMesh
           name="Wolf3D_Body"
-          geometry={nodes.Wolf3D_Body?.geometry}
+          geometry={(nodes.Wolf3D_Body as THREE.SkinnedMesh).geometry}
           material={materials.Wolf3D_Body}
-          skeleton={nodes.Wolf3D_Body?.skeleton}
+          skeleton={(nodes.Wolf3D_Body as THREE.SkinnedMesh).skeleton}
         />
       )}
       {nodes.Wolf3D_Outfit_Bottom && (
         <skinnedMesh
           name="Wolf3D_Outfit_Bottom"
-          geometry={nodes.Wolf3D_Outfit_Bottom.geometry}
+          geometry={(nodes.Wolf3D_Outfit_Bottom as THREE.SkinnedMesh).geometry}
           material={materials.Wolf3D_Outfit_Bottom}
-          skeleton={nodes.Wolf3D_Outfit_Bottom.skeleton}
+          skeleton={(nodes.Wolf3D_Outfit_Bottom as THREE.SkinnedMesh).skeleton}
         />
       )}
       {nodes.Wolf3D_Outfit_Footwear && (
         <skinnedMesh
           name="Wolf3D_Outfit_Footwear"
-          geometry={nodes.Wolf3D_Outfit_Footwear.geometry}
+          geometry={(nodes.Wolf3D_Outfit_Footwear as THREE.SkinnedMesh).geometry}
           material={materials.Wolf3D_Outfit_Footwear}
-          skeleton={nodes.Wolf3D_Outfit_Footwear.skeleton}
+          skeleton={(nodes.Wolf3D_Outfit_Footwear as THREE.SkinnedMesh).skeleton}
         />
       )}
       {nodes.Wolf3D_Outfit_Top && (
         <skinnedMesh
           name="Wolf3D_Outfit_Top"
-          geometry={nodes.Wolf3D_Outfit_Top.geometry}
+          geometry={(nodes.Wolf3D_Outfit_Top as THREE.SkinnedMesh).geometry}
           material={materials.Wolf3D_Outfit_Top}
-          skeleton={nodes.Wolf3D_Outfit_Top.skeleton}
+          skeleton={(nodes.Wolf3D_Outfit_Top as THREE.SkinnedMesh).skeleton}
         />
       )}
       {nodes.Wolf3D_Hair && (
         <skinnedMesh
           name="Wolf3D_Hair"
-          geometry={nodes.Wolf3D_Hair.geometry}
+          geometry={(nodes.Wolf3D_Hair as THREE.SkinnedMesh).geometry}
           material={materials.Wolf3D_Hair}
-          skeleton={nodes.Wolf3D_Hair.skeleton}
+          skeleton={(nodes.Wolf3D_Hair as THREE.SkinnedMesh).skeleton}
         />
       )}
       {nodes.EyeLeft && (
         <skinnedMesh
           name="EyeLeft"
-          geometry={nodes.EyeLeft.geometry}
+          geometry={(nodes.EyeLeft as THREE.SkinnedMesh).geometry}
           material={materials.Wolf3D_Eye}
-          skeleton={nodes.EyeLeft.skeleton}
-          morphTargetDictionary={nodes.EyeLeft.morphTargetDictionary}
-          morphTargetInfluences={nodes.EyeLeft.morphTargetInfluences}
+          skeleton={(nodes.EyeLeft as THREE.SkinnedMesh).skeleton}
+          morphTargetDictionary={(nodes.EyeLeft as THREE.SkinnedMesh).morphTargetDictionary}
+          morphTargetInfluences={(nodes.EyeLeft as THREE.SkinnedMesh).morphTargetInfluences}
         />
       )}
       {nodes.EyeRight && (
         <skinnedMesh
           name="EyeRight"
-          geometry={nodes.EyeRight.geometry}
+          geometry={(nodes.EyeRight as THREE.SkinnedMesh).geometry}
           material={materials.Wolf3D_Eye}
-          skeleton={nodes.EyeRight.skeleton}
-          morphTargetDictionary={nodes.EyeRight.morphTargetDictionary}
-          morphTargetInfluences={nodes.EyeRight.morphTargetInfluences}
+          skeleton={(nodes.EyeRight as THREE.SkinnedMesh).skeleton}
+          morphTargetDictionary={(nodes.EyeRight as THREE.SkinnedMesh).morphTargetDictionary}
+          morphTargetInfluences={(nodes.EyeRight as THREE.SkinnedMesh).morphTargetInfluences}
         />
       )}
       {nodes.Wolf3D_Head && (
         <skinnedMesh
           name="Wolf3D_Head"
-          geometry={nodes.Wolf3D_Head.geometry}
+          geometry={(nodes.Wolf3D_Head as THREE.SkinnedMesh).geometry}
           material={materials.Wolf3D_Skin}
-          skeleton={nodes.Wolf3D_Head.skeleton}
-          morphTargetDictionary={nodes.Wolf3D_Head.morphTargetDictionary}
-          morphTargetInfluences={nodes.Wolf3D_Head.morphTargetInfluences}
+          skeleton={(nodes.Wolf3D_Head as THREE.SkinnedMesh).skeleton}
+          morphTargetDictionary={(nodes.Wolf3D_Head as THREE.SkinnedMesh).morphTargetDictionary}
+          morphTargetInfluences={(nodes.Wolf3D_Head as THREE.SkinnedMesh).morphTargetInfluences}
         />
       )}
       {nodes.Wolf3D_Teeth && (
         <skinnedMesh
           name="Wolf3D_Teeth"
-          geometry={nodes.Wolf3D_Teeth.geometry}
+          geometry={(nodes.Wolf3D_Teeth as THREE.SkinnedMesh).geometry}
           material={materials.Wolf3D_Teeth}
-          skeleton={nodes.Wolf3D_Teeth.skeleton}
-          morphTargetDictionary={nodes.Wolf3D_Teeth.morphTargetDictionary}
-          morphTargetInfluences={nodes.Wolf3D_Teeth.morphTargetInfluences}
+          skeleton={(nodes.Wolf3D_Teeth as THREE.SkinnedMesh).skeleton}
+          morphTargetDictionary={(nodes.Wolf3D_Teeth as THREE.SkinnedMesh).morphTargetDictionary}
+          morphTargetInfluences={(nodes.Wolf3D_Teeth as THREE.SkinnedMesh).morphTargetInfluences}
         />
       )}
     </group>
@@ -575,4 +571,4 @@ useGLTF.preload("/684c911728e0929137bd898f.glb");
 useGLTF.preload("/animation.glb");
 
 export default VideoChat;
-export type { LipSyncCue, LipSyncData, VideoChatRef };
+export type { LipSyncCue, LipSyncData };

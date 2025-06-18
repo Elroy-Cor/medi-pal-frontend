@@ -56,18 +56,18 @@ export function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const videoChatRef = useRef<VideoChatRef>(null);
 
+  // Add refs for managing audio track during AI responses
+  const audioTrackRef = useRef<MediaStreamTrack | null>(null);
+  const audioContextRef = useRef<{
+    audioContext: AudioContext;
+    updateAudioGain: () => void;
+  } | null>(null);
+
+  const audioSenderRef = useRef<RTCRtpSender | null>(null);
+
   // Helper function to ensure timestamp is a Date object
   const ensureDate = (timestamp: Date | string): Date => {
     return timestamp instanceof Date ? timestamp : new Date(timestamp);
-  };
-
-  const welcomeMessage: Message = {
-    id: "welcome",
-    text: `Good morning ${user.name}! 👋 I'm your AI health assistant. I'm here to help you manage your healthcare needs. What would you like to do today?`,
-    sender: "ai",
-    timestamp: new Date(),
-    type: "text",
-    hasButtons: true,
   };
 
   // Add message helper
@@ -88,16 +88,31 @@ export function ChatPage() {
 
   // Clear messages and session storage
   const clearMessages = () => {
+    const welcomeMessage: Message = {
+      id: "welcome",
+      text: `Good morning ${user.name}! 👋 I'm your AI health assistant. I'm here to help you manage your healthcare needs. What would you like to do today?`,
+      sender: "ai",
+      timestamp: new Date(),
+      type: "text",
+      hasButtons: true,
+    };
+
     setMessages([]);
     sessionStorage.removeItem("chatHistory");
-
-    // Initial welcome message
-
     setMessages([welcomeMessage]);
   };
 
   // Fetch OpenAI session when component mounts
   useEffect(() => {
+    const welcomeMessage: Message = {
+      id: "welcome",
+      text: `Good morning ${user.name}! 👋 I'm your AI health assistant. I'm here to help you manage your healthcare needs. What would you like to do today?`,
+      sender: "ai",
+      timestamp: new Date(),
+      type: "text",
+      hasButtons: true,
+    };
+
     const fetchSession = async () => {
       try {
         console.log("Fetching OpenAI session...");
@@ -126,7 +141,6 @@ export function ChatPage() {
     };
 
     fetchSession();
-
     setMessages([welcomeMessage]);
   }, []);
 
@@ -268,7 +282,73 @@ export function ChatPage() {
     }
   };
 
-  // Start real-time voice conversation
+  // const controlAudioTransmission = async (enable: boolean) => {
+  //   if (!peerConnectionRef.current || !audioTrackRef.current) {
+  //     console.log("Cannot control audio - missing refs");
+  //     return;
+  //   }
+
+  //   try {
+  //     if (enable) {
+  //       // Enable audio transmission - only add if not already added
+  //       if (!audioSenderRef.current) {
+  //         console.log("🎤 Enabling audio transmission");
+  //         audioSenderRef.current = peerConnectionRef.current.addTrack(
+  //           audioTrackRef.current,
+  //           audioStreamRef.current!
+  //         );
+  //       } else {
+  //         console.log("🎤 Audio already enabled - no action needed");
+  //       }
+  //     } else {
+  //       // Disable audio transmission - only remove if exists
+  //       if (audioSenderRef.current) {
+  //         console.log("🔇 Disabling audio transmission");
+  //         peerConnectionRef.current.removeTrack(audioSenderRef.current);
+  //         audioSenderRef.current = null;
+  //       } else {
+  //         console.log("🔇 Audio already disabled - no action needed");
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("Error controlling audio transmission:", error);
+  //     // Reset sender ref on error to maintain consistency
+  //     if (!enable) {
+  //       audioSenderRef.current = null;
+  //     }
+  //   }
+  // };
+
+  // Alternative approach using replaceTrack instead of add/remove
+  const controlAudioTransmissionAlt = async (enable: boolean) => {
+    if (!peerConnectionRef.current || !audioTrackRef.current) {
+      console.log("Cannot control audio - missing refs");
+      return;
+    }
+
+    try {
+      if (audioSenderRef.current) {
+        if (enable) {
+          console.log("🎤 Enabling audio transmission via replaceTrack");
+          await audioSenderRef.current.replaceTrack(audioTrackRef.current);
+        } else {
+          console.log("🔇 Disabling audio transmission via replaceTrack");
+          await audioSenderRef.current.replaceTrack(null);
+        }
+      } else if (enable) {
+        // First time - add the track
+        console.log("🎤 Adding audio track for first time");
+        audioSenderRef.current = peerConnectionRef.current.addTrack(
+          audioTrackRef.current,
+          audioStreamRef.current!
+        );
+      }
+    } catch (error) {
+      console.error("Error controlling audio transmission:", error);
+    }
+  };
+
+  // Updated startRealtimeConversation function
   const startRealtimeConversation = async () => {
     console.log("Starting realtime conversation...");
     console.log("Client secret available:", !!clientSecret);
@@ -306,11 +386,13 @@ export function ChatPage() {
         setConnectionState(pc.connectionState);
       };
 
-      // 3. Add audio track
+      // 3. Store audio track reference but don't add it yet
       const audioTrack = stream.getAudioTracks()[0];
       if (audioTrack) {
-        pc.addTrack(audioTrack, stream);
-        console.log("Added audio track to peer connection");
+        audioTrackRef.current = audioTrack;
+        // Initially add the track (user can speak first)
+        audioSenderRef.current = pc.addTrack(audioTrack, stream);
+        console.log("Audio track stored and initially added");
       }
 
       // 4. Create data channel for realtime events
@@ -336,87 +418,94 @@ export function ChatPage() {
             "conversation.item.input_audio_transcription.completed"
           ) {
             addMessage(data.transcript, "user", "voice");
-          } else if (data.type === "response.audio_transcript.delta") {
-            // AI is actively responding
+          }
+
+          // AI started responding with text - disable audio ONCE
+          else if (data.type === "response.audio_transcript.delta") {
             if (!isAiResponding) {
               setIsAiResponding(true);
+              console.log(
+                "🔇 AI started responding - disabling audio transmission (ONCE)"
+              );
+              await controlAudioTransmissionAlt(false); // Use alternative approach
             }
             setPartialTranscript((prev) => prev + data.delta);
-          } else if (data.type === "response.audio_transcript.done") {
+          }
+
+          // AI finished text response
+          else if (data.type === "response.audio_transcript.done") {
             addMessage(data.transcript, "ai", "voice");
             setPartialTranscript("");
-            setIsAiResponding(false); // AI finished responding
-          } else if (data.type === "input_audio_buffer.speech_started") {
-            // Only allow listening if AI is not responding and no function call is loading
+            console.log("AI text transcript done, waiting for audio to finish");
+          }
+
+          // User started speaking
+          else if (data.type === "input_audio_buffer.speech_started") {
             if (!isAiResponding && !isFunctionCallLoading) {
               setIsListening(true);
               setPartialTranscript("");
+              console.log("✅ User started speaking - AI not responding");
+            } else {
+              console.log(
+                "❌ User speech should be blocked - AI is responding"
+              );
             }
-          } else if (data.type === "input_audio_buffer.speech_stopped") {
+          }
+
+          // User stopped speaking
+          else if (data.type === "input_audio_buffer.speech_stopped") {
             setIsListening(false);
-          } else if (data.type === "response.audio.delta") {
-            // AI started generating audio response
+            console.log("User stopped speaking");
+          }
+
+          // AI started audio response - this might fire multiple times, so check state
+          else if (data.type === "response.audio.delta") {
             if (!isAiResponding) {
               setIsAiResponding(true);
+              console.log(
+                "🔇 AI started audio response - disabling audio transmission (ONCE)"
+              );
+              await controlAudioTransmissionAlt(false);
             }
 
-            // If video is active, try to capture audio data for lip-sync
+            // Handle video lip-sync if needed
             if (isVideoActive && videoChatRef.current && data.delta) {
               console.log("Received audio delta for lip-sync:", data.delta);
-              // Note: We'll need to accumulate these deltas and process them
             }
-          } else if (data.type === "response.audio.done") {
-            // AI finished audio response
+          }
+
+          // AI finished audio response
+          else if (data.type === "response.audio.done") {
+            console.log("🎤 AI finished audio response");
+            // Don't enable audio yet - wait for complete response
+          }
+
+          // AI response completely finished - NOW enable audio ONCE
+          else if (data.type === "response.done") {
+            console.log(
+              "🎤 AI response completely done - enabling audio transmission (ONCE)"
+            );
             setIsAiResponding(false);
+            await controlAudioTransmissionAlt(true); // Use alternative approach
 
-            // If video is active, process the complete audio for lip-sync
+            // Handle video lip-sync completion
             if (isVideoActive && videoChatRef.current) {
-              console.log("AI audio response completed, processing lip-sync");
-              // Try to get the audio from the audio player
-              if (audioPlayerRef.current && audioPlayerRef.current.srcObject) {
-                try {
-                  const stream = audioPlayerRef.current
-                    .srcObject as MediaStream;
-                  const mediaRecorder = new MediaRecorder(stream);
-                  const audioChunks: Blob[] = [];
-
-                  mediaRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) {
-                      audioChunks.push(event.data);
-                    }
-                  };
-
-                  mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, {
-                      type: "audio/wav",
-                    });
-                    console.log(
-                      "Generated audio blob for lip-sync:",
-                      audioBlob
-                    );
-                    try {
-                      if (videoChatRef.current) {
-                        await videoChatRef.current.generateLipSyncFromAudio(
-                          audioBlob
-                        );
-                      }
-                    } catch (error) {
-                      console.error("Error generating lip-sync:", error);
-                    }
-                  };
-
-                  // Record for a short duration to capture the response
-                  mediaRecorder.start();
-                  setTimeout(() => {
-                    if (mediaRecorder.state === "recording") {
-                      mediaRecorder.stop();
-                    }
-                  }, 3000);
-                } catch (error) {
-                  console.error("Error recording audio for lip-sync:", error);
-                }
-              }
+              console.log("AI response completed, processing lip-sync");
+              // ... your existing lip-sync code ...
             }
+          }
+
+          // Handle errors
+          else if (data.type === "error") {
+            console.error("OpenAI API error:", data);
+            setIsAiResponding(false);
+            setIsFunctionCallLoading(false);
+            // Re-enable audio on error
+            await controlAudioTransmissionAlt(true);
+            addMessage(
+              `Error: ${data.error?.message || "Unknown error occurred"}`,
+              "system"
+            );
           }
         } catch (error) {
           console.error("Error parsing data channel message:", error);
@@ -425,15 +514,23 @@ export function ChatPage() {
 
       dataChannel.onopen = () => {
         console.log("Data channel opened");
-        // Send session update to enable input audio transcription
+        // Send session update
         dataChannel.send(
           JSON.stringify({
             type: "session.update",
             session: {
               input_audio_transcription: {
                 model: "whisper-1",
-                language: "en", // Default to English unless stated otherwise
+                language: "en",
               },
+              turn_detection: {
+                type: "server_vad",
+                threshold: 0.7, // Higher = less sensitive
+                prefix_padding_ms: 300,
+                silence_duration_ms: 800, // Longer silence before speech end
+              },
+              input_audio_format: "pcm16",
+              output_audio_format: "pcm16",
             },
           })
         );
@@ -458,7 +555,7 @@ export function ChatPage() {
       });
       await pc.setLocalDescription(offer);
 
-      // 7. POST offer SDP to OpenAI via our API route
+      // 7. POST offer SDP to OpenAI
       console.log("Sending SDP offer to OpenAI...");
       const sdpResponse = await fetch(
         `/api/realtime?model=gpt-4o-realtime-preview-2025-06-03`,
@@ -484,8 +581,8 @@ export function ChatPage() {
       await pc.setRemoteDescription({ type: "answer", sdp: answerSDP });
 
       setIsVoiceMode(true);
-      setIsListening(false); // Ensure consistent initial state
-      setIsAiResponding(false); // Ensure consistent initial state
+      setIsListening(false);
+      setIsAiResponding(false);
       addMessage(
         "🎤 Connected! Start speaking... I can help with insurance, medical history, or medical reports!",
         "system",
@@ -501,7 +598,7 @@ export function ChatPage() {
     }
   };
 
-  // Stop real-time conversation
+  // Updated stopRealtimeConversation function
   const stopRealtimeConversation = () => {
     console.log("Stopping realtime conversation...");
 
@@ -512,6 +609,10 @@ export function ChatPage() {
     setIsFunctionCallLoading(false);
     setPartialTranscript("");
     setConnectionState("disconnected");
+
+    // Clear refs - IMPORTANT: Clear these before closing peer connection
+    audioTrackRef.current = null;
+    audioSenderRef.current = null;
 
     // Stop and cleanup audio stream
     if (audioStreamRef.current) {
@@ -663,6 +764,14 @@ Please proceed to the hospital reception and scan the QR code to begin your visi
       }
     }, 1000);
   };
+
+  // Update audio gain when AI response or function loading state changes
+  useEffect(() => {
+    if (audioContextRef.current) {
+      audioContextRef.current.updateAudioGain();
+    }
+  }, [isAiResponding, isFunctionCallLoading]);
+
   console.log("messages", messages);
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
@@ -1001,6 +1110,12 @@ Please proceed to the hospital reception and scan the QR code to begin your visi
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {isAiResponding && (
+        <div className="bg-red-100 text-red-800 px-3 py-1 rounded-full">
+          🤐 Please wait - AI is speaking
+        </div>
       )}
 
       {/* Input Area - Hidden during video call */}

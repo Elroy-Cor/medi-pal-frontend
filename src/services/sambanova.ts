@@ -1,5 +1,6 @@
-import { sessionStartedAtom, currentStepIndexAtom } from "@/store/er-session";
-import { getDefaultStore } from "jotai";
+// Remove unused imports
+// import { sessionStartedAtom, currentStepIndexAtom } from "@/store/er-session";
+// import { getDefaultStore } from "jotai";
 
 interface SambaNovaMessage {
   role: "system" | "user" | "assistant" | "tool";
@@ -222,7 +223,7 @@ async function medicalReportRag(query: string): Promise<string> {
 // }
 
 // Map tool names to functions
-const toolFunctions: Record<string, Function> = {
+const toolFunctions: Record<string, (query: string) => Promise<string>> = {
   'ai_insurance_rag': aiInsuranceRag,
   'medical_history_rag': medicalHistoryRag,
   'medical_report_rag': medicalReportRag,
