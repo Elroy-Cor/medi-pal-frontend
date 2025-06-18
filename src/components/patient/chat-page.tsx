@@ -23,6 +23,8 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { MedicalResultModal } from "./medical-result-modal";
 import VideoChat, { VideoChatRef } from "./video-chat";
+import { sessionStartedAtom, currentStepIndexAtom } from "@/store/er-session";
+import { getDefaultStore } from "jotai";
 
 interface Message {
   id: string;
@@ -629,8 +631,28 @@ export function ChatPage() {
     // Handle quick actions with appropriate API calls
     setTimeout(() => {
       if (action.includes("ER")) {
+        // Generate a session ID
+        const sessionId = `ER-${Date.now()}-${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
+
+        // Get the default store
+        const store = getDefaultStore();
+
+        // Set the session atoms
+        store.set(sessionStartedAtom, true);
+        store.set(currentStepIndexAtom, 0);
+
         addMessage(
-          "Perfect! I'll help you start the ER process. Please navigate to the Emergency section from the sidebar to generate your hospital QR code. The system will guide you through each step. 🏥",
+          `I've started your emergency room session. Your session ID is ${sessionId}. You'll now be guided through the following steps:
+1. Hospital Check-in
+2. Triage Assessment
+3. Waiting Room
+4. Medical Examination
+5. Treatment/Procedure
+6. Discharge & Follow-up
+
+Please proceed to the hospital reception and scan the QR code to begin your visit.`,
           "ai"
         );
       } else {

@@ -1,3 +1,6 @@
+import { sessionStartedAtom, currentStepIndexAtom } from "@/store/er-session";
+import { getDefaultStore } from "jotai";
+
 interface SambaNovaMessage {
   role: "system" | "user" | "assistant" | "tool";
   content: string;
@@ -42,6 +45,8 @@ const SYSTEM_INSTRUCTIONS = `You are a helpful AI health assistant with access t
 
 3. **medical_report_rag**: Use for medical report queries (medical reports, test results, imaging reports, lab results, etc.)
 
+
+
 Guidelines:
 - Always select the most appropriate function based on the user's question
 - When you receive function call results, read out the complete response exactly as provided
@@ -54,6 +59,7 @@ Guidelines:
 - For function call responses, be a direct reader of the information without adding interpretation
 - Ensure that the response is in the same language as the user's question, default to english
 - If the response gives me code, or gibberish, or anything that is not a valid response, just say "I'm sorry, I can't help with that."
+- Do not return the response in json format, if there is a json response, return the 'answer' as the string.
 `;
 
 const TOOL_DEFINITIONS = [
@@ -114,6 +120,20 @@ const TOOL_DEFINITIONS = [
       },
     },
   },
+  // {
+  //   type: "function",
+  //   function: {
+  //     name: "start_emergency_room_experience",
+  //     description: "Start the emergency room experience",
+  //     parameters: {
+  //       type: "object",
+  //       properties: {
+  //         query: {}
+  //       }
+  //     },
+  //     required: [],
+  //   }
+  // }
 ] as const;
 
 // Tool function implementations - replace these with your actual API calls
@@ -177,11 +197,35 @@ async function medicalReportRag(query: string): Promise<string> {
   }
 }
 
+// async function startEmergencyRoomExperience(query: string): Promise<string> {
+//   console.log("Starting emergency room experience"), query;
+//   const sessionId = `ER-${Date.now()}-${Math.random()
+//     .toString(36)
+//     .substr(2, 9)}`;
+
+//   // Get the default store
+//   const store = getDefaultStore();
+
+//   // Set the session atoms
+//   store.set(sessionStartedAtom, true);
+//   store.set(currentStepIndexAtom, 0);
+
+//   return `I've started your emergency room session. Your session ID is ${sessionId}. You'll now be guided through the following steps:
+//   1. Hospital Check-in
+//   2. Triage Assessment
+//   3. Waiting Room
+//   4. Medical Examination
+//   5. Treatment/Procedure
+//   6. Discharge & Follow-up
+  
+//   Please proceed to the hospital reception and scan the QR code to begin your visit.`;
+// }
+
 // Map tool names to functions
-const toolFunctions: Record<string, (query: string) => Promise<string>> = {
-  ai_insurance_rag: aiInsuranceRag,
-  medical_history_rag: medicalHistoryRag,
-  medical_report_rag: medicalReportRag,
+const toolFunctions: Record<string, Function> = {
+  'ai_insurance_rag': aiInsuranceRag,
+  'medical_history_rag': medicalHistoryRag,
+  'medical_report_rag': medicalReportRag,
 };
 
 class SambaNovaService {
@@ -228,6 +272,7 @@ class SambaNovaService {
           max_tokens: 1000,
           tools: TOOL_DEFINITIONS, // Include tools here
           tool_choice: "auto", // Let model decide when to use tools
+          // stream: false,
         }),
       });
 
@@ -238,6 +283,7 @@ class SambaNovaService {
       }
 
       const data: SambaNovaResponse = await response.json();
+      console.log("SambaNova response:", response);
       const assistantMessage = data.choices[0].message;
 
       // Check if the model wants to use tools
@@ -338,22 +384,9 @@ class SambaNovaService {
       // For streaming with tools, we need to handle it differently
       // If tools might be needed, fall back to non-streaming
       const possibleToolKeywords = [
-        "insurance",
-        "coverage",
-        "claim",
-        "policy",
-        "copay",
-        "deductible",
-        "history",
-        "diagnosis",
-        "treatment",
-        "medication",
-        "allergy",
-        "report",
-        "test",
-        "lab",
-        "imaging",
-        "result",
+        'insurance', 'coverage', 'claim', 'policy', 'copay', 'deductible',
+        'history', 'diagnosis', 'treatment', 'medication', 'allergy',
+        'report', 'test', 'lab', 'imaging', 'result'
       ];
 
       const mightNeedTools = possibleToolKeywords.some((keyword) =>

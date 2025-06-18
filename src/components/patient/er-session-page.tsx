@@ -15,72 +15,30 @@ import {
   Stethoscope,
   User,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-
-const ER_STEPS = [
-  {
-    id: "check-in",
-    title: "Hospital Check-in",
-    description: "Scan QR code at reception",
-    icon: QrCode,
-    status: "waiting",
-  },
-  {
-    id: "triage",
-    title: "Triage Assessment",
-    description: "Initial evaluation by nurse",
-    icon: User,
-    status: "upcoming",
-  },
-  {
-    id: "waiting-room",
-    title: "Waiting Room",
-    description: "Wait for doctor assignment",
-    icon: Clock,
-    status: "upcoming",
-  },
-  {
-    id: "examination",
-    title: "Medical Examination",
-    description: "Doctor consultation and tests",
-    icon: Stethoscope,
-    status: "upcoming",
-  },
-  {
-    id: "treatment",
-    title: "Treatment/Procedure",
-    description: "Receive necessary medical care",
-    icon: AlertTriangle,
-    status: "upcoming",
-  },
-  {
-    id: "discharge",
-    title: "Discharge & Follow-up",
-    description: "Review results and next steps",
-    icon: FileText,
-    status: "upcoming",
-  },
-];
+import { useEffect } from "react";
+import { useAtom } from 'jotai';
+import {
+  sessionStartedAtom,
+  currentStepIndexAtom,
+  erStepsAtom,
+  startERSession,
+  progressToNextStep,
+  type ERStep,
+  DEFAULT_ER_STEPS
+} from '@/store/er-session';
 
 export function ERSessionPage() {
-  const [sessionStarted, setSessionStarted] = useState(false);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [steps, setSteps] = useState(ER_STEPS);
+  const [sessionStarted, setSessionStarted] = useAtom(sessionStartedAtom);
+  const [currentStepIndex] = useAtom(currentStepIndexAtom);
+  const [steps] = useAtom(erStepsAtom);
+  const [, startSession] = useAtom(startERSession);
+  const [, progressStep] = useAtom(progressToNextStep);
 
   useEffect(() => {
     if (sessionStarted) {
       // Simulate automatic progression through steps
       const interval = setInterval(() => {
-        setCurrentStepIndex((prev) => {
-          if (prev < steps.length - 1) {
-            const newSteps = [...steps];
-            newSteps[prev].status = "completed";
-            newSteps[prev + 1].status = "in-progress";
-            setSteps(newSteps);
-            return prev + 1;
-          }
-          return prev;
-        });
+        progressStep();
       }, 8000); // Progress every 8 seconds for demo
 
       return () => clearInterval(interval);
@@ -88,12 +46,7 @@ export function ERSessionPage() {
   }, [sessionStarted, steps]);
 
   const handleScanQR = () => {
-    setSessionStarted(true);
-    const newSteps = [...steps];
-    newSteps[0].status = "completed";
-    newSteps[1].status = "in-progress";
-    setSteps(newSteps);
-    setCurrentStepIndex(1);
+    startSession();
   };
 
   const getStepStatusColor = (status: string) => {
@@ -109,7 +62,7 @@ export function ERSessionPage() {
     }
   };
 
-  const getStepIcon = (step: (typeof ER_STEPS)[number]) => {
+  const getStepIcon = (step: any, index: number) => {
     const IconComponent = step.icon;
     if (step.status === "completed") {
       return <CheckCircle className="h-5 w-5 text-green-600" />;
@@ -186,7 +139,7 @@ export function ERSessionPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {ER_STEPS.map((step, index) => (
+                {DEFAULT_ER_STEPS.map((step, index) => (
                   <div key={step.id} className="flex items-start gap-3">
                     <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
                       {index + 1}
@@ -306,6 +259,7 @@ export function ERSessionPage() {
             {steps.map((step, index) => {
               const isCompleted = step.status === "completed";
               const isCurrent = step.status === "in-progress";
+              const isUpcoming = step.status === "upcoming";
 
               return (
                 <div
@@ -318,7 +272,9 @@ export function ERSessionPage() {
                       : "border-gray-200 bg-gray-50"
                   }`}
                 >
-                  <div className="flex-shrink-0 mt-1">{getStepIcon(step)}</div>
+                  <div className="flex-shrink-0 mt-1">
+                    {getStepIcon(step, index)}
+                  </div>
                   <div className="flex-grow">
                     <div className="flex items-center justify-between">
                       <h3
@@ -356,7 +312,7 @@ export function ERSessionPage() {
                     {isCurrent && (
                       <div className="mt-3 p-3 bg-white rounded border border-blue-200">
                         <h4 className="font-medium text-blue-800 mb-2">
-                          What&apos;s happening now:
+                          What's happening now:
                         </h4>
                         <p className="text-sm text-blue-700">
                           {step.id === "triage" &&

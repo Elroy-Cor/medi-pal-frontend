@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { TypingIndicator } from "@/components/ui/typing-indicator";
 import { FileText, MessageCircle, Send } from "lucide-react";
 import { useState } from "react";
 
@@ -22,6 +23,7 @@ interface ChatMessage {
   text: string;
   sender: "user" | "ai";
   timestamp: Date;
+  isLoading?: boolean;
 }
 
 export function MedicalResultModal({
@@ -37,9 +39,10 @@ export function MedicalResultModal({
     },
   ]);
   const [inputText, setInputText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendMessage = () => {
-    if (!inputText.trim()) return;
+  const handleSendMessage = async () => {
+    if (!inputText.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -49,43 +52,75 @@ export function MedicalResultModal({
     };
 
     setChatMessages((prev) => [...prev, userMessage]);
+    const query = inputText;
     setInputText("");
+    setIsLoading(true);
 
-    // Simulate AI response based on the medical report
-    setTimeout(() => {
-      let aiResponse = "";
-      if (inputText.toLowerCase().includes("cholesterol") || inputText.toLowerCase().includes("lipid")) {
-        aiResponse =
-          "Your lipid panel shows several concerning findings: Total cholesterol is 218 mg/dL (borderline high), LDL is 142 mg/dL (borderline high), HDL is low at 38 mg/dL, and triglycerides are elevated at 188 mg/dL. This pattern indicates dyslipidemia and increased cardiovascular risk. Your doctor recommends starting statin therapy and adopting a Mediterranean-style diet.";
-      } else if (inputText.toLowerCase().includes("diabetes") || inputText.toLowerCase().includes("glucose") || inputText.toLowerCase().includes("a1c")) {
-        aiResponse =
-          "Your HbA1c is 6.1%, which places you in the prediabetes range (5.7-6.4%). Your fasting glucose is also elevated at 108 mg/dL. This indicates insulin resistance and significantly increased risk for developing Type 2 diabetes. Immediate lifestyle modifications including reducing refined carbohydrates and increasing physical activity to 150 minutes per week are recommended.";
-      } else if (inputText.toLowerCase().includes("vitamin") || inputText.toLowerCase().includes("deficiency")) {
-        aiResponse =
-          "Your vitamin D level is significantly low at 22 ng/mL, which is considered deficient (normal is 30-100 ng/mL). This deficiency can affect bone health, immune function, and overall wellbeing. Your doctor recommends high-dose supplementation with 5000 IU daily for 12 weeks, followed by 2000 IU maintenance therapy.";
-      } else if (inputText.toLowerCase().includes("iron") || inputText.toLowerCase().includes("anemia") || inputText.toLowerCase().includes("hemoglobin")) {
-        aiResponse =
-          "Your results show iron deficiency anemia with hemoglobin at 12.8 g/dL (low), hematocrit at 38.2% (low), serum iron at 52 μg/dL (low), and ferritin severely low at 8 ng/mL. This indicates significant iron deficiency that requires iron supplementation (Ferrous sulfate 325mg daily) and investigation for potential sources of blood loss, particularly GI bleeding.";
-      } else if (inputText.toLowerCase().includes("liver") || inputText.toLowerCase().includes("alt") || inputText.toLowerCase().includes("ast")) {
-        aiResponse =
-          "Your liver enzymes are elevated: ALT is 68 U/L and AST is 52 U/L (both above normal ranges). This suggests hepatic stress or inflammation. Contributing factors may include alcohol use, medications, fatty liver disease, or other causes. Your doctor recommends alcohol cessation, weight loss if applicable, and avoiding hepatotoxic medications.";
-      } else if (inputText.toLowerCase().includes("inflammation") || inputText.toLowerCase().includes("crp")) {
-        aiResponse =
-          "Your C-Reactive Protein (CRP) is significantly elevated at 4.2 mg/L, indicating high cardiovascular risk (normal is <1.0 mg/L). This suggests systemic inflammation which increases your risk for heart disease and stroke. Recommendations include an anti-inflammatory diet, regular exercise, stress management, and addressing other cardiovascular risk factors.";
-      } else {
-        aiResponse =
-          "Your lab results show several areas needing attention: prediabetes (HbA1c 6.1%), dyslipidemia, iron deficiency anemia, vitamin D deficiency, elevated liver enzymes, and high inflammation markers. These findings indicate increased cardiovascular and diabetes risk requiring immediate lifestyle changes and medical management. Which specific area would you like me to explain in more detail?";
+    // Add loading message
+    const loadingMessage: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      text: "",
+      sender: "ai",
+      timestamp: new Date(),
+      isLoading: true,
+    };
+
+    setChatMessages((prev) => [...prev, loadingMessage]);
+
+    try {
+      // Call the medical report RAG API
+      const response = await fetch("/api/medical-report-rag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
       }
 
-      const aiMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        text: aiResponse,
-        sender: "ai",
-        timestamp: new Date(),
-      };
+      const data = await response.json();
+      
+      // Extract the response text from the API response
+      let aiResponseText = "";
+      if (data.success && data.data) {
+        aiResponseText = data.data;
+      } else if (data.response) {
+        aiResponseText = data.response;
+      } else {
+        aiResponseText = "I'm sorry, I couldn't find specific information about that in your medical reports. Could you try rephrasing your question or ask about a specific test result?";
+      }
 
-      setChatMessages((prev) => [...prev, aiMessage]);
-    }, 1000);
+      // Replace loading message with actual response
+      setChatMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === loadingMessage.id
+            ? {
+                ...msg,
+                text: aiResponseText,
+                isLoading: false,
+              }
+            : msg
+        )
+      );
+    } catch (error) {
+      console.error("Error calling medical report RAG:", error);
+      
+      // Replace loading message with error message
+      setChatMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === loadingMessage.id
+            ? {
+                ...msg,
+                text: "I'm sorry, I'm having trouble accessing your medical report information right now. Please try again in a moment.",
+                isLoading: false,
+              }
+            : msg
+        )
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -133,7 +168,11 @@ export function MedicalResultModal({
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      {message.text}
+                      {message.isLoading ? (
+                        <TypingIndicator />
+                      ) : (
+                        message.text
+                      )}
                     </div>
                   </div>
                 ))}
@@ -143,11 +182,16 @@ export function MedicalResultModal({
                 <Input
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  placeholder="Ask about your results..."
+                  placeholder={isLoading ? "Processing..." : "Ask about your results..."}
                   onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                   className="text-sm"
+                  disabled={isLoading}
                 />
-                <Button size="sm" onClick={handleSendMessage}>
+                <Button 
+                  size="sm" 
+                  onClick={handleSendMessage}
+                  disabled={isLoading || !inputText.trim()}
+                >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
