@@ -20,6 +20,9 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { MedicalResultModal } from "./medical-result-modal";
+import { sambaNovaService } from "@/services/sambanova";
+import { SimpleMarkdown } from "@/components/ui/simple-markdown";
+import { TypingIndicator } from "@/components/ui/typing-indicator";
 
 interface Message {
   id: string;
@@ -95,37 +98,59 @@ export function ChatPage() {
     setMessages((prev) => [...prev, newMessage]);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputText.trim()) return;
-
+    
+    const userMessage = inputText;
     addMessage(inputText, "user", isVoiceMode ? "voice" : "text");
     setInputText("");
 
-    // Simulate AI response
-    setTimeout(() => {
-      if (
-        inputText.toLowerCase().includes("er") ||
-        inputText.toLowerCase().includes("emergency")
-      ) {
-        addMessage(
-          "I understand you need emergency assistance. I'll help you start the ER process right away. Please navigate to the Emergency section in the sidebar to generate your hospital QR code. 🚨",
-          "ai"
-        );
-      } else if (
-        inputText.toLowerCase().includes("family") ||
-        inputText.toLowerCase().includes("next of kin")
-      ) {
-        addMessage(
-          "I've checked on your family members and emergency contacts. Everyone is currently safe and not in any medical facilities. You can view detailed status in your Profile & Family section. 👨‍👩‍👧‍👦",
-          "ai"
-        );
-      } else {
-        addMessage(
-          "I'm here to help with any healthcare questions or needs you have. Feel free to ask about your medical history, insurance, or any health concerns. 💙",
-          "ai"
+    // Add a streaming message placeholder with typing indicator
+    const streamingMessageId = "streaming-" + Date.now().toString();
+    const streamingMessage: Message = {
+      id: streamingMessageId,
+      text: "",
+      sender: "ai",
+      timestamp: new Date(),
+      type: "text",
+    };
+    setMessages((prev) => [...prev, streamingMessage]);
+
+    try {
+      // Small delay to show typing indicator
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Stream the response from SambaNova
+      const stream = sambaNovaService.sendMessageStream(userMessage);
+      let streamedText = "";
+
+      for await (const chunk of stream) {
+        streamedText += chunk;
+        
+        // Update the streaming message with accumulated text
+        setMessages((prev) => 
+          prev.map(msg => 
+            msg.id === streamingMessageId 
+              ? { ...msg, text: streamedText }
+              : msg
+          )
         );
       }
-    }, 1000);
+    } catch (error) {
+      console.error('Error getting streaming AI response:', error);
+      
+      // Update with error message
+      setMessages((prev) => 
+        prev.map(msg => 
+          msg.id === streamingMessageId 
+            ? { 
+                ...msg, 
+                text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment." 
+              }
+            : msg
+        )
+      );
+    }
   };
 
   const toggleVoiceMode = () => {
@@ -482,7 +507,13 @@ export function ChatPage() {
                           {ensureDate(message.timestamp).toLocaleTimeString()}
                         </span>
                       </div>
-                      <p className="leading-relaxed">{message.text}</p>
+                      {message.sender === "ai" && message.text === "" ? (
+                        <TypingIndicator />
+                      ) : message.sender === "ai" ? (
+                        <SimpleMarkdown content={message.text} />
+                      ) : (
+                        <p className="leading-relaxed">{message.text}</p>
+                      )}
                     </div>
                   </div>
                 </div>

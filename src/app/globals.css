@@ -120,3 +120,29 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Ensure markdown content renders properly */
+@layer components {
+  .markdown-content {
+    /* Ensure lists display correctly */
+    ul, ol {
+      padding-left: 1.5rem;
+    }
+    
+    /* Ensure list markers are visible */
+    ul li {
+      list-style-type: disc;
+      list-style-position: outside;
+    }
+    
+    ol li {
+      list-style-type: decimal;
+      list-style-position: outside;
+    }
+    
+    /* Improve text spacing */
+    p + p {
+      margin-top: 0.75rem;
+    }
+  }
+}
