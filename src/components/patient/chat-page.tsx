@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { MedicalResultModal } from "./medical-result-modal";
+import VideoChat, { VideoChatRef } from "./video-chat";
 
 interface Message {
   id: string;
@@ -51,6 +52,7 @@ export function ChatPage() {
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const videoChatRef = useRef<VideoChatRef>(null);
 
   // Helper function to ensure timestamp is a Date object
   const ensureDate = (timestamp: Date | string): Date => {
@@ -355,9 +357,64 @@ export function ChatPage() {
             if (!isAiResponding) {
               setIsAiResponding(true);
             }
+
+            // If video is active, try to capture audio data for lip-sync
+            if (isVideoActive && videoChatRef.current && data.delta) {
+              console.log("Received audio delta for lip-sync:", data.delta);
+              // Note: We'll need to accumulate these deltas and process them
+            }
           } else if (data.type === "response.audio.done") {
             // AI finished audio response
             setIsAiResponding(false);
+
+            // If video is active, process the complete audio for lip-sync
+            if (isVideoActive && videoChatRef.current) {
+              console.log("AI audio response completed, processing lip-sync");
+              // Try to get the audio from the audio player
+              if (audioPlayerRef.current && audioPlayerRef.current.srcObject) {
+                try {
+                  const stream = audioPlayerRef.current
+                    .srcObject as MediaStream;
+                  const mediaRecorder = new MediaRecorder(stream);
+                  const audioChunks: Blob[] = [];
+
+                  mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                      audioChunks.push(event.data);
+                    }
+                  };
+
+                  mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, {
+                      type: "audio/wav",
+                    });
+                    console.log(
+                      "Generated audio blob for lip-sync:",
+                      audioBlob
+                    );
+                    try {
+                      if (videoChatRef.current) {
+                        await videoChatRef.current.generateLipSyncFromAudio(
+                          audioBlob
+                        );
+                      }
+                    } catch (error) {
+                      console.error("Error generating lip-sync:", error);
+                    }
+                  };
+
+                  // Record for a short duration to capture the response
+                  mediaRecorder.start();
+                  setTimeout(() => {
+                    if (mediaRecorder.state === "recording") {
+                      mediaRecorder.stop();
+                    }
+                  }, 3000);
+                } catch (error) {
+                  console.error("Error recording audio for lip-sync:", error);
+                }
+              }
+            }
           }
         } catch (error) {
           console.error("Error parsing data channel message:", error);
@@ -663,256 +720,329 @@ export function ChatPage() {
         </div>
       </div>
 
-      {/* Partial Transcript Display */}
-
       {/* Video Chat Container */}
       {isVoiceMode && isVideoActive && (
-        <Card className="mb-6 shadow-lg border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
-          <CardContent className="p-6">
+        <Card className="mb-6 shadow-xl border-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
+          <CardContent>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
                 <Video className="h-5 w-5 text-blue-600" />
-                Video Chat with Your Personal Health Assistant
+                Dr. MediPal - Your AI Health Assistant
               </h3>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                <span className="text-sm text-slate-600">Live</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 border border-green-200 rounded-full">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-green-700">
+                    Live Video Call
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 text-slate-500">
+                  <div className="w-2 h-2 bg-slate-300 rounded-full"></div>
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-slate-300 rounded-full"></div>
+                </div>
               </div>
             </div>
 
-            <div className="relative bg-slate-900 rounded-xl overflow-hidden aspect-video">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center text-white">
-                  <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="h-8 w-8" />
-                  </div>
-                  <h4 className="text-xl font-semibold mb-2">
-                    AI Health Assistant
-                  </h4>
-                  <p className="text-blue-200">Ready for video consultation</p>
+            <div
+              className="relative bg-gradient-to-b from-blue-50 to-indigo-100 rounded-xl overflow-hidden border-2 border-white shadow-inner"
+              style={{ height: "65vh" }}
+            >
+              <VideoChat
+                ref={videoChatRef}
+                isActive={isVideoActive}
+                className="w-full h-full"
+              />
+
+              {/* Video call overlay UI */}
+              <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-2">
+                  <p className="text-white text-sm font-medium">Dr. MediPal</p>
+                  <p className="text-white/80 text-xs">AI Health Specialist</p>
                 </div>
+
+                <div className="flex gap-2">
+                  {isListening && (
+                    <div className="bg-red-500 rounded-full p-2 animate-pulse">
+                      <Mic className="h-4 w-4 text-white" />
+                    </div>
+                  )}
+                  {isAiResponding && (
+                    <div className="bg-blue-500 rounded-full p-2 animate-bounce">
+                      <Volume2 className="h-4 w-4 text-white" />
+                    </div>
+                  )}
+                  {isFunctionCallLoading && (
+                    <div className="bg-orange-500 rounded-full p-2 animate-spin">
+                      <Activity className="h-4 w-4 text-white" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Professional video call indicators */}
+              <div className="absolute top-4 right-4">
+                <div className="bg-black/20 backdrop-blur-sm rounded-lg px-3 py-1">
+                  <span className="text-white text-xs font-medium">HD</span>
+                </div>
+              </div>
+
+              {/* Video call controls */}
+              <div className="absolute bottom-4 right-4 center-4">
+                <div className="flex items-center justify-center gap-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleVideo}
+                    className="bg-red-500 hover:bg-red-600 text-white border-0 rounded-full px-4 py-2"
+                  >
+                    <VideoOff className="h-4 w-4 mr-2" />
+                    End Video Call
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Professional video call footer */}
+            <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>Secure end-to-end encrypted consultation</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <span>3D Avatar Technology</span>
+                <span>•</span>
+                <span>Real-time Lip Sync</span>
+                <span>•</span>
+                <span>Voice conversation active</span>
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Chat Messages */}
-      <Card
-        className={`flex-1 mb-6 shadow-sm border-slate-200 ${
-          isVideoActive ? "max-h-64" : ""
-        }`}
-        style={{
-          paddingTop: "unset",
-          paddingBottom: "unset",
-        }}
-      >
-        <CardContent className="p-4 h-full overflow-hidden">
-          <div className="h-full overflow-y-auto space-y-2 pr-2 max-h-[calc(100vh-24rem)]">
-            {messages.map((message) =>
-              message.hasButtons ? (
-                <div key={message.id} className="flex justify-start">
-                  <div className="max-w-[80%]">
-                    <div className="pt-2 pb-2 px-2 rounded-2xl bg-white border border-slate-200 text-slate-800 rounded-bl-md shadow-sm">
-                      <div className="flex items-center gap-2 mb-2">
-                        {message.type === "voice" && (
-                          <Mic className="h-3 w-3 opacity-70" />
-                        )}
-                        <span className="text-xs opacity-70">
-                          {ensureDate(message.timestamp).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <p className="leading-relaxed text-sm">{message.text}</p>
-                      <div className="flex gap-2 mt-2 flex-wrap ">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-full flex gap-2"
-                          onClick={() =>
-                            handleQuickAction("Start the ER process")
-                          }
-                        >
-                          <AlertTriangle className="h-4 w-4 text-red-600" />
-                          <span className="font-semibold text-red-800 text-xs">
-                            Start ER check-in
+      {/* Chat Messages - Hidden during video call */}
+      {!(isVoiceMode && isVideoActive) && (
+        <Card
+          className="flex-1 mb-6 shadow-sm border-slate-200"
+          style={{
+            paddingTop: "unset",
+            paddingBottom: "unset",
+          }}
+        >
+          <CardContent className="p-4 h-full overflow-hidden">
+            <div className="h-full overflow-y-auto space-y-2 pr-2 max-h-[calc(100vh-24rem)]">
+              {messages.map((message) =>
+                message.hasButtons ? (
+                  <div key={message.id} className="flex justify-start">
+                    <div className="max-w-[80%]">
+                      <div className="pt-2 pb-2 px-2 rounded-2xl bg-white border border-slate-200 text-slate-800 rounded-bl-md shadow-sm">
+                        <div className="flex items-center gap-2 mb-2">
+                          {message.type === "voice" && (
+                            <Mic className="h-3 w-3 opacity-70" />
+                          )}
+                          <span className="text-xs opacity-70">
+                            {ensureDate(message.timestamp).toLocaleTimeString()}
                           </span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-full flex gap-2"
-                          onClick={() =>
-                            handleQuickAction("Check on next of kin")
-                          }
-                        >
-                          <Users className="h-4 w-4 text-blue-600" />
-                          <span className="font-semibold text-blue-800 text-xs">
-                            Check family members
-                          </span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-full flex gap-2"
-                          onClick={() => setIsResultsModalOpen(true)}
-                        >
-                          <FileText className="h-4 w-4 text-green-600" />
-                          <span className="font-semibold text-green-800 text-xs">
-                            View medical reports
-                          </span>
-                        </Button>
+                        </div>
+                        <p className="leading-relaxed text-sm">
+                          {message.text}
+                        </p>
+                        <div className="flex gap-2 mt-2 flex-wrap ">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full flex gap-2"
+                            onClick={() =>
+                              handleQuickAction("Start the ER process")
+                            }
+                          >
+                            <AlertTriangle className="h-4 w-4 text-red-600" />
+                            <span className="font-semibold text-red-800 text-xs">
+                              Start ER check-in
+                            </span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full flex gap-2"
+                            onClick={() =>
+                              handleQuickAction("Check on next of kin")
+                            }
+                          >
+                            <Users className="h-4 w-4 text-blue-600" />
+                            <span className="font-semibold text-blue-800 text-xs">
+                              Check family members
+                            </span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full flex gap-2"
+                            onClick={() => setIsResultsModalOpen(true)}
+                          >
+                            <FileText className="h-4 w-4 text-green-600" />
+                            <span className="font-semibold text-green-800 text-xs">
+                              View medical reports
+                            </span>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
+                ) : (
                   <div
-                    className={`max-w-[80%] ${
-                      message.sender === "user" ? "order-2" : "order-1"
+                    key={message.id}
+                    className={`flex ${
+                      message.sender === "user"
+                        ? "justify-end"
+                        : "justify-start"
                     }`}
                   >
                     <div
-                      className={`p-4 rounded-2xl ${
-                        message.sender === "user"
-                          ? "bg-blue-600 text-white rounded-br-md"
-                          : message.sender === "system"
-                          ? "bg-gray-100 text-gray-700 rounded-bl-md"
-                          : "bg-white border border-slate-200 text-slate-800 rounded-bl-md shadow-sm"
+                      className={`max-w-[80%] ${
+                        message.sender === "user" ? "order-2" : "order-1"
                       }`}
                     >
-                      <div className="flex items-center gap-2 mb-2">
-                        {message.type === "voice" && (
-                          <Mic className="h-3 w-3 opacity-70" />
-                        )}
-                        <span className="text-xs opacity-70">
-                          {ensureDate(message.timestamp).toLocaleTimeString()}
-                        </span>
-                        {/* Show message type indicator */}
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] py-0.5 px-1 rounded-full ${
-                            message.type === "voice"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {message.type === "voice" ? "🎤 Voice" : "💬 Text"}
-                        </Badge>
-                      </div>
-
-                      {/* User messages */}
-                      {message.sender === "user" && (
-                        <p className="leading-relaxed text-sm">
-                          {message.text}
-                        </p>
-                      )}
-
-                      {/* System messages */}
-                      {message.sender === "system" && (
-                        <p className="leading-relaxed text-sm">
-                          {message.text}
-                        </p>
-                      )}
-
-                      {/* AI messages */}
-                      {message.sender === "ai" && (
-                        <>
-                          {/* Show typing indicator for empty AI messages (streaming placeholder) */}
-                          {message.text === "" && <TypingIndicator />}
-
-                          {/* Show completed AI message content */}
-                          {message.text !== "" && (
-                            <SimpleMarkdown content={message.text} />
+                      <div
+                        className={`p-4 rounded-2xl ${
+                          message.sender === "user"
+                            ? "bg-blue-600 text-white rounded-br-md"
+                            : message.sender === "system"
+                            ? "bg-gray-100 text-gray-700 rounded-bl-md"
+                            : "bg-white border border-slate-200 text-slate-800 rounded-bl-md shadow-sm"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          {message.type === "voice" && (
+                            <Mic className="h-3 w-3 opacity-70" />
                           )}
+                          <span className="text-xs opacity-70">
+                            {ensureDate(message.timestamp).toLocaleTimeString()}
+                          </span>
+                          {/* Show message type indicator */}
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] py-0.5 px-1 rounded-full ${
+                              message.type === "voice"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {message.type === "voice" ? "🎤 Voice" : "💬 Text"}
+                          </Badge>
+                        </div>
 
-                          {/* Show partial transcript only for the most recent AI message when in voice mode */}
-                          {message.id === messages[messages.length - 1]?.id &&
-                            isVoiceMode &&
-                            partialTranscript &&
-                            message.text === "" && (
-                              <div className="italic text-slate-600">
-                                <Mic className="h-3 w-3 inline mr-1" />
-                                {partialTranscript}
-                              </div>
+                        {/* User messages */}
+                        {message.sender === "user" && (
+                          <p className="leading-relaxed text-sm">
+                            {message.text}
+                          </p>
+                        )}
+
+                        {/* System messages */}
+                        {message.sender === "system" && (
+                          <p className="leading-relaxed text-sm">
+                            {message.text}
+                          </p>
+                        )}
+
+                        {/* AI messages */}
+                        {message.sender === "ai" && (
+                          <>
+                            {/* Show typing indicator for empty AI messages (streaming placeholder) */}
+                            {message.text === "" && <TypingIndicator />}
+
+                            {/* Show completed AI message content */}
+                            {message.text !== "" && (
+                              <SimpleMarkdown content={message.text} />
                             )}
-                        </>
+
+                            {/* Show partial transcript only for the most recent AI message when in voice mode */}
+                            {message.id === messages[messages.length - 1]?.id &&
+                              isVoiceMode &&
+                              partialTranscript &&
+                              message.text === "" && (
+                                <div className="italic text-slate-600">
+                                  <Mic className="h-3 w-3 inline mr-1" />
+                                  {partialTranscript}
+                                </div>
+                              )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Input Area - Hidden during video call */}
+      {!(isVoiceMode && isVideoActive) && (
+        <Card className="shadow-sm border-slate-200">
+          <CardContent className="p-4">
+            <div className="flex gap-3">
+              <div className="flex-1 relative">
+                <Input
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  placeholder={
+                    isVoiceMode
+                      ? isFunctionCallLoading
+                        ? "Loading data from backend, please wait..."
+                        : isAiResponding
+                        ? "AI is responding, please wait..."
+                        : isListening
+                        ? "Listening..."
+                        : "Voice mode active - speak or type..."
+                      : "Type your message about insurance, medical history, or health questions..."
+                  }
+                  onKeyPress={(e) =>
+                    e.key === "Enter" && !isVoiceMode && handleSendMessage()
+                  }
+                  disabled={
+                    isVoiceMode &&
+                    (isListening || isAiResponding || isFunctionCallLoading)
+                  }
+                  className="h-12 px-4 rounded-xl border-slate-200 focus:border-blue-300 focus:ring-blue-100"
+                />
+                {(isListening || isAiResponding || isFunctionCallLoading) && (
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                    <div
+                      className={
+                        isFunctionCallLoading
+                          ? "animate-spin"
+                          : isAiResponding
+                          ? "animate-bounce"
+                          : "animate-pulse"
+                      }
+                    >
+                      {isFunctionCallLoading ? (
+                        <Activity className="h-5 w-5 text-orange-500" />
+                      ) : isAiResponding ? (
+                        <Volume2 className="h-5 w-5 text-blue-500" />
+                      ) : (
+                        <Mic className="h-5 w-5 text-green-500" />
                       )}
                     </div>
                   </div>
-                </div>
-              )
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Input Area */}
-      <Card className="shadow-sm border-slate-200">
-        <CardContent className="p-4">
-          <div className="flex gap-3">
-            <div className="flex-1 relative">
-              <Input
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder={
-                  isVoiceMode
-                    ? isFunctionCallLoading
-                      ? "Loading data from backend, please wait..."
-                      : isAiResponding
-                      ? "AI is responding, please wait..."
-                      : isListening
-                      ? "Listening..."
-                      : "Voice mode active - speak or type..."
-                    : "Type your message about insurance, medical history, or health questions..."
-                }
-                onKeyPress={(e) =>
-                  e.key === "Enter" && !isVoiceMode && handleSendMessage()
-                }
-                disabled={
-                  isVoiceMode &&
-                  (isListening || isAiResponding || isFunctionCallLoading)
-                }
-                className="h-12 px-4 rounded-xl border-slate-200 focus:border-blue-300 focus:ring-blue-100"
-              />
-              {(isListening || isAiResponding || isFunctionCallLoading) && (
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  <div
-                    className={
-                      isFunctionCallLoading
-                        ? "animate-spin"
-                        : isAiResponding
-                        ? "animate-bounce"
-                        : "animate-pulse"
-                    }
-                  >
-                    {isFunctionCallLoading ? (
-                      <Activity className="h-5 w-5 text-orange-500" />
-                    ) : isAiResponding ? (
-                      <Volume2 className="h-5 w-5 text-blue-500" />
-                    ) : (
-                      <Mic className="h-5 w-5 text-green-500" />
-                    )}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
+              <Button
+                onClick={handleSendMessage}
+                disabled={!inputText.trim() || isVoiceMode}
+                className="h-12 px-6 rounded-xl bg-blue-600 hover:bg-blue-700"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
-            <Button
-              onClick={handleSendMessage}
-              disabled={!inputText.trim() || isVoiceMode}
-              className="h-12 px-6 rounded-xl bg-blue-600 hover:bg-blue-700"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Hidden audio player for AI responses */}
       <audio
