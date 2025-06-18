@@ -127,9 +127,7 @@ export function InsurancePage() {
           <Shield className="h-6 w-6 text-white" />
         </div>
         <div>
-          <h1 className="text-3xl font-semibold text-gray-900">
-            Insurance Plans
-          </h1>
+          <h1 className="text-3xl font-bold text-slate-800">Insurance Plans</h1>
           <p className="text-slate-600">
             Your complete medical visit history and records
           </p>

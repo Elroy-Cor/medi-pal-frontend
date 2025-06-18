@@ -82,7 +82,7 @@ export function MedicalResultModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Blood Test Results - June 2024
+            Blood Test Results - June 18, 2025
           </DialogTitle>
         </DialogHeader>
 

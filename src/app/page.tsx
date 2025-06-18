@@ -94,8 +94,8 @@ export default function LandingPage() {
               Transforming Emergency Department Experience
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Long wait times shouldn&apos;t mean patients feel abandoned. Our AI
-              companion bridges the gap when clinical staff are busy and
+              Long wait times shouldn&apos;t mean patients feel abandoned. Our
+              AI companion bridges the gap when clinical staff are busy and
               families can&apos;t be present.
             </p>
           </div>

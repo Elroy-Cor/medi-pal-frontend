@@ -36,7 +36,7 @@ interface PatientSidebarProps {
 const mainMenuItems = [
   {
     id: "chat" as PageType,
-    title: "AI Assistant",
+    title: "Health Buddy",
     icon: MessageCircle,
     // description: "Chat with your AI health assistant",
   },
@@ -60,7 +60,7 @@ const mainMenuItems = [
   },
   {
     id: "er-session" as PageType,
-    title: "Register",
+    title: "Emergency",
     icon: AlertTriangle,
     // description: "Emergency services",
   },

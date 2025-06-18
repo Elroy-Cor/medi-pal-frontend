@@ -1,9 +1,11 @@
 "use client";
+import { user as mockUser } from "@/app/constants/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+
 import {
   Activity,
   Calendar,
@@ -15,21 +17,6 @@ import {
   Shield,
   User,
 } from "lucide-react";
-
-const mockUser = {
-  name: "John Smith",
-  email: "john.smith@email.com",
-  phone: "+1 (555) 123-4567",
-  address: "123 Main St, City, State 12345",
-  dateOfBirth: "1985-06-15",
-  bloodType: "O+",
-  allergies: ["Penicillin", "Shellfish"],
-  emergencyContact: "Jane Smith (Wife)",
-  memberSince: "2020-03-15",
-  patientId: "PAT-2024-001",
-  insuranceProvider: "Blue Cross Blue Shield",
-  primaryDoctor: "Dr. Sarah Johnson",
-};
 
 export function ProfilePage() {
   return (

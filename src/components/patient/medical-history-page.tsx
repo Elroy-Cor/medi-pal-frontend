@@ -111,7 +111,7 @@ export function MedicalHistoryPage() {
         </div>
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Medical History</h1>
-          <p className="text-slate-600">
+          <p className="text-xs text-slate-600 mt-1">
             Your complete medical visit history and records
           </p>
         </div>
