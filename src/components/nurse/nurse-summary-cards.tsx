@@ -1,65 +1,118 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Users, AlertTriangle, Clock, AlertCircle } from "lucide-react"
+import { Card, CardContent } from '@/components/ui/card';
+import { formatTime } from '@/utils/nurse/nurseUtils';
+import {
+  Users,
+  AlertTriangle,
+  Clock,
+  AlertCircle,
+  BedDouble,
+} from 'lucide-react';
 
 interface SummaryCardsProps {
-  totalPatients: number
-  criticalPatients: number
-  avgWaitTime: string
-  distressedPatients: number
+  totalPatients: number;
+  criticalPatients: number;
+  avgWaitTime: number;
+  distressedPatients: number;
+  beddedPatients?: number;
 }
 
-export function SummaryCards({ totalPatients, criticalPatients, avgWaitTime, distressedPatients }: SummaryCardsProps) {
+export function SummaryCards({
+  totalPatients,
+  criticalPatients,
+  avgWaitTime,
+  distressedPatients,
+  beddedPatients = 0,
+}: SummaryCardsProps) {
   return (
-    <div className="p-6 bg-white border-b border-gray-200">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Patients in Ward</p>
-                <p className="text-2xl font-bold text-gray-900">{totalPatients}</p>
+    <div className='p-3 sm:p-6 sm:pt-2 pt-2 pb-2 sm:pb-2'>
+      <div className='grid grid-cols-2 sm:grid-cols-6 lg:grid-cols-5 gap-2 sm:gap-4'>
+        
+        {/* Total Patients Card */}
+        <Card className='h-[80px] sm:h-[80px] sm:col-span-2 lg:col-span-1'>
+          <CardContent className='p-2 sm:p-4 h-full'>
+            <div className='flex flex-row items-center justify-between h-full'>
+              <div className='flex items-center space-x-2'>
+                <Users className='w-6 h-6 text-emerald-600 flex-shrink-0' />
+                <p className='text-xs sm:text-sm font-medium text-gray-600 truncate'>
+                  Total Patients
+                </p>
               </div>
-              <Users className="w-8 h-8 text-blue-600" />
+              <p className='text-lg font-bold text-gray-900 mt-1'>
+                {totalPatients}
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Critical Patients</p>
-                <p className="text-2xl font-bold text-red-600">{criticalPatients}</p>
+        {/* Bedded Patients Card */}
+        <Card className='h-[80px] sm:h-[80px] sm:col-span-2 lg:col-span-1'>
+          <CardContent className='p-2 sm:p-4 h-full'>
+            <div className='flex flex-row items-center justify-between h-full'>
+              <div className='flex items-center space-x-2'>
+                <BedDouble className='w-6 h-6 text-cyan-600 flex-shrink-0' />
+                <p className='text-xs sm:text-sm font-medium text-gray-600 truncate'>
+                  Beds Occupied
+                </p>
               </div>
-              <AlertTriangle className="w-8 h-8 text-red-600" />
+              <p className='text-lg font-bold text-gray-900 mt-1'>
+                {beddedPatients}
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Avg Wait Time</p>
-                <p className="text-2xl font-bold text-orange-600">{avgWaitTime}</p>
+        {/* Critical Patients Card */}
+        <Card className='h-[80px] sm:h-[80px] sm:col-span-2 lg:col-span-1'>
+          <CardContent className='p-2 sm:p-4 h-full'>
+            <div className='flex flex-row items-center justify-between h-full'>
+              <div className='flex items-center space-x-2'>
+                <AlertTriangle className='w-6 h-6 text-red-500 flex-shrink-0' />
+                <p className='text-xs sm:text-sm font-medium text-gray-600 truncate'>
+                  Critical
+                </p>
               </div>
-              <Clock className="w-8 h-8 text-orange-600" />
+              <p className='text-lg font-bold text-red-500 mt-1'>
+                {criticalPatients}
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Distressed Patients</p>
-                <p className="text-2xl font-bold text-red-700">{distressedPatients}</p>
+        {/* Average Wait Time Card */}
+        <Card className='h-[80px] sm:h-[80px] sm:col-span-3 lg:col-span-1'>
+          <CardContent className='p-2 sm:p-4 h-full'>
+            <div className='flex flex-row items-center justify-between h-full'>
+              <div className='flex items-center space-x-2'>
+                <Clock className='w-6 h-6 text-teal -600 flex-shrink-0' />
+                <p className='text-xs sm:text-sm font-medium text-gray-600 truncate'>
+                  Avg Wait
+                </p>
               </div>
-              <AlertCircle className="w-8 h-8 text-red-700" />
+              <p className='text-lg font-bold text-teal -600 mt-1 truncate'>
+                {formatTime(avgWaitTime)}
+              </p>
             </div>
           </CardContent>
         </Card>
+
+        {/* Distressed Patients Card */}
+        <Card className='h-[80px] sm:h-[80px] col-span-2 sm:col-span-3 lg:col-span-1'>
+          <CardContent className='p-2 sm:p-4 h-full'>
+            <div className='flex flex-row items-center justify-between h-full'>
+              <div className='flex items-center space-x-2'>
+                <AlertCircle className='w-6 h-6 text-red-700 flex-shrink-0' />
+                <p className='text-xs sm:text-sm font-medium text-gray-600 truncate'>
+                  Distressed
+                </p>
+              </div>
+              <p className='text-lg font-bold text-red-700 mt-1'>
+                {distressedPatients}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
       </div>
     </div>
-  )
+  );
 }

@@ -1,25 +1,271 @@
-import { Accordion } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  ChevronDown,
+  ChevronRight,
+  Activity,
+  Clock,
+  Heart,
+  AlertTriangle,
+} from "lucide-react"
+import React, { useState } from "react"
 import type { Patient } from "@/utils/nurse/nurseTypes"
-import { PatientCard } from "./nurse-patient-card"
+import { getSentimentIcon, getSentimentColor, getPriorityColor, getStageIcon } from "@/utils/nurse/nurseUtils"
+import { TreatmentTimeline } from "./nurse-treatment-timeline"
+import { formatTime } from "@/utils/nurse/nurseUtils"
 
 interface PatientListProps {
   patients: Patient[]
 }
 
 export function PatientList({ patients }: PatientListProps) {
-  return (
-    <main className="flex-1 p-6">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Current Patients</h3>
-          <p className="text-sm text-gray-600">{patients.length} patients shown</p>
-        </div>
+  const [openRows, setOpenRows] = useState<string[]>([])
 
-        <Accordion type="multiple" className="space-y-2">
-          {patients.map((patient) => (
-            <PatientCard key={patient.id} patient={patient} />
-          ))}
-        </Accordion>
+  const toggleRow = (id: string) => {
+    setOpenRows((prev) =>
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+    )
+  }
+
+  return (
+    <main className="flex-1 p-6 pt-0">
+      <div className="space-y-2">
+        <Card className="shadow-md py-4 gap-1">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                <Activity className="h-5 w-5 text-blue-600" />
+                Current Patients
+              </CardTitle>
+              <p className="text-sm text-gray-600">{patients.length} patients shown</p>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]"></TableHead>
+                  <TableHead>Patient</TableHead>
+                  <TableHead>Current Stage</TableHead>
+                  <TableHead>Sentiment</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Wait Time</TableHead>
+                  <TableHead className="text-right pr-6">Room</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {patients.map((patient) => (
+                  <React.Fragment key={patient.id}>
+                    <TableRow
+                      className="cursor-pointer hover:bg-gray-50 data-[state=open]:bg-gray-100"
+                      onClick={() => toggleRow(patient.id)}
+                      data-state={openRows.includes(patient.id) ? "open" : "closed"}
+                    >
+                      <TableCell className="pl-4">
+                        {openRows.includes(patient.id) ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </TableCell>
+                      
+                      <TableCell>
+                        <div>
+                          <p className="font-semibold text-gray-900">{patient.name}</p>
+                          <p className="text-sm text-gray-600">
+                            {patient.id} • Age {patient.age}
+                          </p>
+                        </div>
+                      </TableCell>
+                      
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <div className="flex-shrink-0">
+                            {getStageIcon(patient.status || '')}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{patient.status}</p>
+                            <p className="text-xs text-gray-500">
+                              In stage: {formatTime(patient.timeInStage ?? 0)}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <div className="flex-shrink-0">
+                            {getSentimentIcon(patient.sentiment)}
+                          </div>
+                          <Badge className={`${getSentimentColor(patient.sentiment)} text-xs`}>
+                            {patient.sentiment.charAt(0).toUpperCase() + patient.sentiment.slice(1)}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      
+                      <TableCell>
+                        <Badge className={`${getPriorityColor(patient.priority)} font-semibold`}>
+                          {patient.priority.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-3 w-3 text-gray-500" />
+                          <span className="text-sm font-medium">{formatTime(patient.waitTime ?? 0)}</span>
+                        </div>
+                      </TableCell>
+                      
+                      <TableCell className="text-right font-medium pr-6">
+                        {patient.room}
+                      </TableCell>
+                    </TableRow>
+                    
+                    {openRows.includes(patient.id) && (
+                      <TableRow key={`${patient.id}-details`}>
+                        <TableCell colSpan={7} className="p-6 bg-gray-50">
+                          <div className="space-y-6">
+                            {/* Reason for ER Visit */}
+                            <div className="bg-blue-50 rounded-lg p-4">
+                              <h4 className="text-sm font-semibold text-blue-900 mb-2">Reason for ER Visit</h4>
+                              <p className="text-sm text-blue-800">{patient.complaint}</p>
+                            </div>
+
+                            {/* Treatment Timeline */}
+                            <TreatmentTimeline
+                              prevStage={patient.prevStatus || ''}
+                              currentStage={patient.status || ''}
+                              nextStage={patient.nextStatus || ''}
+                            />
+
+                            {/* Detailed Information Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                              <div>
+                                <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                  <Activity className="h-4 w-4" />
+                                  Patient Details
+                                </h5>
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Arrival Time:</span>
+                                    <span className="text-gray-900 font-medium">{patient.arrivalTime}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Total Wait:</span>
+                                    <span className="text-gray-900 font-medium">{formatTime(patient.waitTime ?? 0)}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Phone:</span>
+                                    <span className="text-gray-900 font-medium">{patient.phone}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Address:</span>
+                                    <span className="text-gray-900 font-medium text-right">{patient.address}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div>
+                                <h5 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                  <Heart className="h-4 w-4 text-red-500" />
+                                  Vital Signs
+                                </h5>
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Blood Pressure:</span>
+                                    <span className="text-gray-900 font-medium">{patient.vitals.bp}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Temperature:</span>
+                                    <span className="text-gray-900 font-medium">{patient.vitals.temp}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Heart Rate:</span>
+                                    <span className="text-gray-900 font-medium">{patient.vitals.hr}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">SpO2:</span>
+                                    <span className="text-gray-900 font-medium">{patient.vitals.spo2}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div>
+                                <h5 className="text-sm font-semibold text-gray-700 mb-3">
+                                  Medical Information
+                                </h5>
+                                <div className="space-y-3">
+                                  <div>
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Allergies</span>
+                                    <p className="text-sm text-gray-800 mt-1">
+                                      {patient.allergies && patient.allergies.length > 0 
+                                        ? patient.allergies.join(', ') 
+                                        : 'None known'}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Medications</span>
+                                    <p className="text-sm text-gray-800 mt-1">
+                                      {patient.medications && patient.medications.length > 0 
+                                        ? patient.medications.join(', ') 
+                                        : 'None'}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Medical History</span>
+                                    <p className="text-sm text-gray-800 mt-1">
+                                      {patient.medicalHistory && patient.medicalHistory.length > 0 
+                                        ? patient.medicalHistory.join(', ') 
+                                        : 'None significant'}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Next Action */}
+                            <div className="bg-yellow-50 rounded-lg p-4">
+                              <h4 className="text-sm font-semibold text-yellow-900 mb-2 flex items-center gap-2">
+                                <AlertTriangle className="h-4 w-4" />
+                                Next Action Required
+                              </h4>
+                              <p className="text-sm text-yellow-800">{patient.nextAction}</p>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex flex-wrap gap-2 pt-2">
+                              <Button variant="outline" size="sm">
+                                Update Status
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                View Full Record
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                Contact Patient
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                Transfer Patient
+                              </Button>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     </main>
   )

@@ -6,6 +6,7 @@ import { User } from "lucide-react"
 import type { Patient } from "@/utils/nurse/nurseTypes"
 import { getSentimentIcon, getSentimentColor, getPriorityColor, getStageIcon } from "@/utils/nurse/nurseUtils"
 import { TreatmentTimeline } from "./nurse-treatment-timeline"
+import { formatTime } from "@/utils/nurse/nurseUtils"
 
 interface PatientCardProps {
   patient: Patient
@@ -14,47 +15,53 @@ interface PatientCardProps {
 export function PatientCard({ patient }: PatientCardProps) {
   return (
     <AccordionItem value={patient.id} className="border-0">
-      <Card className="hover:shadow-md transition-shadow">
-        <AccordionTrigger className="hover:no-underline p-0 pr-4">
-          <CardContent className="p-4 w-full">
-            {/* Collapsed View - Essential Info Only */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                {/* Patient Name & Basic Info */}
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-gray-600" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-semibold text-gray-900">{patient.name}</p>
-                    <p className="text-sm text-gray-600">
-                      {patient.id} • Age {patient.age} • {patient.room}
-                    </p>
-                  </div>
+      <Card className="hover:shadow-md transition-shadow p-1">
+        <AccordionTrigger className="hover:no-underline p-0 pr-4 ">
+          <CardContent className="p-2 w-full">
+            {/* Collapsed View - Grid Layout */}
+            <div className="grid grid-cols-12 gap-4 items-center w-full">
+              {/* Patient Name & Basic Info - 4 columns */}
+              <div className="col-span-4 flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <User className="w-5 h-5 text-gray-600" />
                 </div>
+                <div className="text-left min-w-0">
+                  <p className="font-semibold text-gray-900 truncate">{patient.name}</p>
+                  <p className="text-sm text-gray-600 truncate">
+                    {patient.id} • Age {patient.age} • {patient.room}
+                  </p>
+                </div>
+              </div>
 
-                {/* Current Stage */}
-                <div className="flex items-center space-x-2 min-w-0">
+              {/* Current Stage - 3 columns */}
+              <div className="col-span-4 flex items-center space-x-2">
+                <div className="flex-shrink-0">
                   {getStageIcon(patient.status || '')}
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-gray-900">{patient.status}</p>
-                    <p className="text-xs text-gray-500">In stage: {patient.timeInStage}</p>
-                  </div>
                 </div>
+                <div className="text-left min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{patient.status}</p>
+                  <p className="text-xs text-gray-500">In stage: {formatTime(patient.timeInStage ?? 0)}</p>
+                </div>
+              </div>
 
-                {/* Sentiment */}
-                <div className="flex items-center space-x-2">
+              {/* Sentiment - 2.5 columns */}
+              <div className="col-span-3 flex items-center space-x-2">
+                <div className="flex-shrink-0">
                   {getSentimentIcon(patient.sentiment)}
-                  <Badge className={getSentimentColor(patient.sentiment)}>
-                    {patient.sentiment.charAt(0).toUpperCase() + patient.sentiment.slice(1)}
-                  </Badge>
                 </div>
+                <Badge className={`${getSentimentColor(patient.sentiment)} text-xs`}>
+                  {patient.sentiment.charAt(0).toUpperCase() + patient.sentiment.slice(1)}
+                </Badge>
               </div>
 
-              <div className="flex items-center space-x-3">
-                {/* Priority */}
-                <Badge className={getPriorityColor(patient.priority)}>{patient.priority.toUpperCase()}</Badge>
+              {/* Priority - 1.5 columns */}
+              <div className="col-span-1 flex justify-center">
+                <Badge className={`${getPriorityColor(patient.priority)} font-semibold`}>
+                  {patient.priority.toUpperCase()}
+                </Badge>
               </div>
+
+
             </div>
           </CardContent>
         </AccordionTrigger>
@@ -89,8 +96,8 @@ export function PatientCard({ patient }: PatientCardProps) {
                         <span className="text-gray-900">{patient.arrivalTime}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Total Wait:</span>
-                        <span className="text-gray-900">{patient.waitTime}</span>
+                        <span className="text-gray-600">Total Wait Time:</span>
+                        <span className="text-gray-900">{formatTime(patient.waitTime ?? 0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Complaint:</span>

@@ -1,10 +1,8 @@
-import {
-  Activity,
-  Search,
-  Stethoscope,
-} from 'lucide-react';
+import { Activity, Search, Stethoscope, ChevronLeft } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
+import Link from 'next/link';
+import Image from 'next/image';
 
 export const NurseHeader = ({
   searchTerm,
@@ -18,22 +16,59 @@ export const NurseHeader = ({
   return (
     <header className='bg-white border-b border-gray-200 px-4 sm:px-6 py-4'>
       <div className='flex items-center justify-between'>
-        {/* LOGO AND TITLE */}
         <div className='flex items-center space-x-4'>
-          <div className='flex items-center space-x-3'>
-            <div className='w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center'>
-              <Activity className='w-6 h-6 text-white' />
-            </div>
+          {/* back button */}
+          <div className='block '>
+            <Link href='/' className='text-gray-500 hover:text-gray-700'>
+              <ChevronLeft className='w-6 h-6' />
+            </Link>
+          </div>
+          {/* Medipal logo in the center of header */}
+          <div className='hidden sm:flex flex-1 justify-center'>
+          <Link href={'/'}>
+            <Image
+              src={'/brand-01.png'}
+              alt='Medipal Logo'
+              width={140}
+              height={140}
+            />
+            </Link>
+          </div>
+          {/* medipal other logo in the center of header in mobile view */}
+          <div className='flex sm:hidden flex-1 justify-center'>
+            <Link href={'/'}>
+              <Image
+                src={'/brand-4x4.png'}
+                alt='Medipal Logo'
+                width={25}
+                height={25} 
+              />
+            </Link>
+          </div>
+
+          {/* vertical separator */}
+          <div className='border-l border-gray-300 h-6 sm:h-12 mr-4'></div>
+
+
+          {/* Ward Monitor Title */}
+          <div className='flex items-center space-x-2'>
             <div>
-              <h1 className='text-xl sm:text-2xl font-bold text-gray-900'>
-                Ward Patient Monitor
+              <h1 className='text-xl font-bold text-gray-900'>
+                Ward monitor
               </h1>
-              <p className='text-xs sm:text-sm text-gray-600 hidden sm:block'>
+              <p className='text-xs  text-gray-600 hidden md:block'>
                 Real-time patient status and sentiment tracking
               </p>
             </div>
           </div>
         </div>
+
+        {/* TITLE */}
+        <div className='flex items-center space-x-4'>
+
+        </div>
+
+
 
         {/* Desktop Actions */}
         <div className='hidden lg:flex items-center space-x-4'>
@@ -48,7 +83,7 @@ export const NurseHeader = ({
             />
           </div>
           <Button
-            className='bg-blue-600 hover:bg-blue-700 text-white'
+            className='bg-[#234b6c] hover:bg-cyan-800 text-white'
             onClick={() => setTriageModalOpen(true)}
           >
             <Stethoscope className='w-4 h-4 mr-2' />

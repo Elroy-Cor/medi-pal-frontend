@@ -30,6 +30,8 @@ export type Patient = {
   arrivalTime?: string;
 };
 
+export type RegisteredPatient = Omit<Patient, 'id' | 'status' | 'vitals' | 'complaint' | 'sentiment' | 'priority' | 'prevStatus' | 'nextStatus' | 'waitTime' | 'room' | 'progress' | 'nextAction' | 'timeInStage'>;
+
 export type Sentiments = 'good' | 'calm' | 'tired' | 'restless' | 'angry' | 'distressed';
 
 export enum Status {
