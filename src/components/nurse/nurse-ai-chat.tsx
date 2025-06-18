@@ -1,28 +1,24 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
-  AlertTriangle,
-  Mic,
-  MicOff,
+  Zap,
   Send,
-  Stethoscope,
   Trash2,
   Users,
-  VideoOff,
-  Volume2,
-  Zap,
-} from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+  AlertTriangle,
+  Stethoscope,
+} from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+
 
 interface Message {
   id: string;
   text: string;
   sender: "user" | "ai";
   timestamp: Date | string;
-  type?: "voice" | "text";
   hasButtons?: boolean;
 }
 
@@ -44,10 +40,7 @@ export function AIChat({
   setTriageModalOpen,
 }: AIChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState("");
-  const [isVoiceMode, setIsVoiceMode] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [isVideoActive, setIsVideoActive] = useState(false);
+  const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Helper function to ensure timestamp is a Date object
@@ -55,10 +48,26 @@ export function AIChat({
     return timestamp instanceof Date ? timestamp : new Date(timestamp);
   };
 
+  const getTimeOfDay = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'morning';
+    if (hour < 18) return 'afternoon';
+    return 'evening';
+  };
+
   // Clear messages and session storage
   const clearMessages = () => {
-    setMessages([]);
-    sessionStorage.removeItem("nurseAiChatHistory");
+
+    // Initial welcome message
+    const welcomeMessage: Message = {
+      id: 'welcome',
+      text: `Good ${getTimeOfDay()}! 👋 I'm your AI Nurse Assistant. I can see you're monitoring ${totalPatients} patients with ${criticalPatients} critical cases. How can I help you with patient care today?`,
+      sender: 'ai',
+      timestamp: new Date(),
+      hasButtons: true,
+    };
+    setMessages([welcomeMessage]);
+    sessionStorage.removeItem('nurseAiChatHistory');
   };
 
   // Load chat history from session storage
@@ -73,7 +82,6 @@ export function AIChat({
         text: `Good ${getTimeOfDay()}! 👋 I'm your AI Nurse Assistant. I can see you're monitoring ${totalPatients} patients with ${criticalPatients} critical cases. How can I help you with patient care today?`,
         sender: "ai",
         timestamp: new Date(),
-        type: "text",
         hasButtons: true,
       };
       setMessages([welcomeMessage]);
@@ -92,24 +100,13 @@ export function AIChat({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const getTimeOfDay = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "morning";
-    if (hour < 18) return "afternoon";
-    return "evening";
-  };
 
-  const addMessage = (
-    text: string,
-    sender: "user" | "ai",
-    type: "voice" | "text" = "text"
-  ) => {
+  const addMessage = (text: string, sender: 'user' | 'ai') => {
     const newMessage: Message = {
       id: Date.now().toString(),
       text,
       sender,
       timestamp: new Date(),
-      type,
     };
     setMessages((prev) => [...prev, newMessage]);
   };
@@ -117,8 +114,8 @@ export function AIChat({
   const handleSendMessage = () => {
     if (!inputText.trim()) return;
 
-    addMessage(inputText, "user", isVoiceMode ? "voice" : "text");
-    setInputText("");
+    addMessage(inputText, 'user');
+    setInputText('');
 
     // Simulate AI response based on nurse context
     setTimeout(() => {
@@ -174,25 +171,6 @@ export function AIChat({
     }, 1000);
   };
 
-  const toggleVoiceMode = () => {
-    setIsVoiceMode(!isVoiceMode);
-    if (!isVoiceMode) {
-      // Simulate voice listening
-      setIsListening(true);
-      setTimeout(() => {
-        setIsListening(false);
-        setInputText("Check protocols for agitated patients");
-      }, 2000);
-    }
-  };
-
-  const toggleVideo = () => {
-    setIsVideoActive(!isVideoActive);
-    if (!isVideoActive) {
-      setIsVoiceMode(true);
-    }
-  };
-
   const handleQuickAction = (action: string) => {
     addMessage(action, "user");
     setTimeout(() => {
@@ -217,6 +195,7 @@ export function AIChat({
     }, 1000);
   };
 
+  // Move the conditional return AFTER all hooks
   if (!isOpen) return null;
 
   return (
@@ -233,25 +212,7 @@ export function AIChat({
               <p className="text-xs text-purple-100">Ward Overview Context</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant={isVoiceMode ? "default" : "secondary"}
-              className="px-2 py-1 text-xs bg-white/20 text-white border-white/30"
-            >
-              {isVoiceMode ? "🎤" : "💬"}
-            </Badge>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleVoiceMode}
-              className="text-white hover:bg-white/20 p-1"
-            >
-              {isVoiceMode ? (
-                <Volume2 className="h-3 w-3" />
-              ) : (
-                <Mic className="h-3 w-3" />
-              )}
-            </Button>
+          <div className='flex items-center gap-2'>
             <Button
               variant="ghost"
               size="sm"
@@ -271,46 +232,6 @@ export function AIChat({
           </div>
         </div>
       </div>
-
-      {/* Video Chat Container */}
-      {isVoiceMode && isVideoActive && (
-        <div className="p-3 border-b border-gray-200 bg-gradient-to-br from-blue-50 to-indigo-50">
-          <div className="relative bg-slate-900 rounded-lg overflow-hidden aspect-video">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center text-white">
-                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Zap className="h-6 w-6" />
-                </div>
-                <h4 className="text-sm font-semibold mb-1">
-                  AI Nurse Assistant
-                </h4>
-                <p className="text-xs text-blue-200">
-                  Video consultation ready
-                </p>
-              </div>
-            </div>
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-              <div className="flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20 rounded-full p-1"
-                >
-                  <Mic className="h-3 w-3" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-white hover:bg-red-500/80 rounded-full p-1"
-                  onClick={toggleVideo}
-                >
-                  <VideoOff className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Messages */}
       <div className="flex-1 p-3 overflow-y-auto">
@@ -370,11 +291,8 @@ export function AIChat({
                       : "bg-gray-100 text-gray-800 rounded-lg rounded-bl-md"
                   } p-3`}
                 >
-                  <div className="flex items-center gap-2 mb-1">
-                    {message.type === "voice" && (
-                      <Mic className="h-3 w-3 opacity-70" />
-                    )}
-                    <span className="text-xs opacity-70">
+                  <div className='flex items-center gap-2 mb-1'>
+                    <span className='text-xs opacity-70'>
                       {ensureDate(message.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
@@ -394,28 +312,16 @@ export function AIChat({
             <Input
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder={
-                isListening
-                  ? "Listening..."
-                  : "Ask about patients, protocols, or medications..."
-              }
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              disabled={isListening}
-              className="text-sm h-10 rounded-lg"
+              placeholder='Ask about patients, protocols, or medications...'
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              className='text-sm h-10 rounded-lg'
             />
-            {isListening && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="animate-pulse">
-                  <MicOff className="h-4 w-4 text-red-500" />
-                </div>
-              </div>
-            )}
           </div>
           <Button
             onClick={handleSendMessage}
-            disabled={!inputText.trim() || isListening}
-            size="sm"
-            className="h-10 px-4 bg-cyan-800 hover:bg-cyan-900 rounded-lg"
+            disabled={!inputText.trim()}
+            size='sm'
+            className='h-10 px-4 bg-cyan-800 hover:bg-cyan-900 rounded-lg'
           >
             <Send className="h-3 w-3" />
           </Button>

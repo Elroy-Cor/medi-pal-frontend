@@ -1,14 +1,13 @@
 "use client";
 
 import type React from "react";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { registeredPatients } from "@/utils/nurse/initialPatients";
-import type { RegisteredPatient } from "@/utils/nurse/nurseTypes";
-import { Search, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Search, X } from 'lucide-react';
+import { registeredPatients } from '@/utils/nurse/initialPatients';
+import type { RegisteredPatient } from '@/utils/nurse/nurseTypes';
 
 interface PatientSearchProps {
   onPatientSelect?: (patient: RegisteredPatient) => void;
@@ -208,11 +207,11 @@ export function PatientSearch({ onPatientSelect }: PatientSearchProps) {
         )}
 
         {/* No Results */}
-        {searchTerm.trim() !== "" && suggestions.length === 0 && (
-          <Card className="absolute top-full left-0 right-0 mt-2 z-50 shadow-lg border-gray-200">
-            <CardContent className="p-4 text-center text-gray-500">
-              <Search className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-              <p className="text-sm">
+        {searchTerm.trim() !== '' && suggestions.length === 0 && (
+          <Card className='absolute top-full left-0 right-0 mt-2 z-50 shadow-lg border-gray-200'>
+            <CardContent className='p-4 text-center text-gray-500'>
+              <Search className='w-8 h-8 mx-auto mb-2 text-gray-300' />
+              <p className='text-sm'>
                 No patients found matching &quot;{searchTerm}&quot;
               </p>
             </CardContent>

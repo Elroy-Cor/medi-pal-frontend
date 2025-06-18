@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -41,6 +41,8 @@ import {
 } from '@/utils/nurse/nurseTypes';
 import { PatientSearch } from './nurse-patient-search';
 import { motion } from 'motion/react';
+// toast/sonner
+import { useToast } from '@/hooks/use-toast';
 
 export type PatientData = {
   name: string;
@@ -270,79 +272,82 @@ export function TriageForm({
   });
 
   const [isVoiceActive, setIsVoiceActive] = useState(false);
-  const [currentFocusedField, setCurrentFocusedField] = useState<string | null>(null);
+  const [currentFocusedField, setCurrentFocusedField] = useState<string | null>(
+    null
+  );
   const [voiceSimulationStep, setVoiceSimulationStep] = useState(0);
   const [aiEvaluation, setAiEvaluation] = useState<TriageEvaluation | null>(
     null
   );
   const [finalPriority, setFinalPriority] = useState<number | null>(null);
+  const { toast } = useToast();
 
   // Create refs for all form inputs
   const inputRefs = useRef<Record<string, HTMLElement | null>>({});
-  
+
   // Define the voice simulation sequence
-  const voiceSimulationSteps = [
+  const voiceSimulationSteps = useMemo(() => [
     {
       field: 'complaint',
       value: 'Severe chest pain radiating to left arm, started 30 minutes ago',
-      delay: 3000,
-      message: 'Chief complaint: Severe chest pain'
+      delay: 1000,
+      message: 'Chief complaint: Severe chest pain',
     },
     {
       field: 'painLevel',
       value: 8,
       delay: 1000,
-      message: 'Pain level: 8 out of 10'
+      message: 'Pain level: 8 out of 10',
     },
     {
       field: 'systolic',
       value: '160',
-      delay: 1500,
-      message: 'Blood pressure: 160'
+      delay: 1000,
+      message: 'Blood pressure: 160',
     },
     {
       field: 'diastolic',
       value: '95',
       delay: 1000,
-      message: 'over 95'
+      message: 'over 95',
     },
     {
       field: 'heartRate',
       value: '110',
-      delay: 1500,
-      message: 'Heart rate: 110 beats per minute'
+      delay: 1000,
+      message: 'Heart rate: 110 beats per minute',
     },
     {
       field: 'temperature',
-      value: '98.6',
+      value: '37.1',
       delay: 1000,
-      message: 'Temperature: normal'
+      message: 'Temperature: normal',
     },
     {
       field: 'spo2',
       value: '96',
-      delay: 1500,
-      message: 'Oxygen saturation: 96 percent'
+      delay: 1000,
+      message: 'Oxygen saturation: 96 percent',
     },
     {
       field: 'allergies',
       value: 'No known allergies',
-      delay: 1500,
-      message: 'No known allergies'
+      delay: 1000,
+      message: 'No known allergies',
     },
     {
       field: 'medications',
       value: 'Lisinopril 10mg daily, Metformin 500mg twice daily',
-      delay: 2000,
-      message: 'Current medications noted'
+      delay: 1000,
+      message: 'Current medications noted',
     },
     {
       field: 'medicalHistory',
       value: 'Hypertension, Type 2 diabetes, smoker',
-      delay: 2000,
-      message: 'Medical history: Hypertension, diabetes'
-    }
-  ];
+      delay: 1000,
+      message: 'Medical history: Hypertension, diabetes',
+    },
+  ], []);
 
   // Helper function to set refs
   const setInputRef = (field: string) => (el: HTMLElement | null) => {
@@ -353,14 +358,14 @@ export function TriageForm({
   const scrollToElement = (element: HTMLElement) => {
     element.scrollIntoView({
       behavior: 'smooth',
-      block: 'center'
+      block: 'center',
     });
   };
 
   // Helper function to add focus border
   const getFocusBorderClass = (fieldName: string) => {
-    return currentFocusedField === fieldName 
-      ? 'ring-2 ring-blue-500 ring-offset-2 border-blue-500 transition-all duration-300' 
+    return currentFocusedField === fieldName
+      ? 'ring-2 ring-blue-500 ring-offset-2 border-blue-500 transition-all duration-300'
       : '';
   };
 
@@ -373,10 +378,10 @@ export function TriageForm({
     console.log('Voice simulation step:', voiceSimulationStep);
 
     const currentStep = voiceSimulationSteps[voiceSimulationStep];
-    
+
     // Set focus border on current field
     setCurrentFocusedField(currentStep.field);
-    
+
     // Scroll to the current field
     const element = inputRefs.current[currentStep.field];
     if (element) {
@@ -386,54 +391,67 @@ export function TriageForm({
     const timer = setTimeout(() => {
       // Fill the form data
       if (currentStep.field === 'painLevel') {
-        setFormData(prev => ({ 
-          ...prev, 
-          painLevel: currentStep.value as number 
+        setFormData((prev) => ({
+          ...prev,
+          painLevel: currentStep.value as number,
         }));
-      } else if (['systolic', 'diastolic', 'heartRate', 'temperature', 'spo2'].includes(currentStep.field)) {
-        setFormData(prev => ({
+      } else if (
+        ['systolic', 'diastolic', 'heartRate', 'temperature', 'spo2'].includes(
+          currentStep.field
+        )
+      ) {
+        setFormData((prev) => ({
           ...prev,
           vitals: {
             ...prev.vitals,
-            [currentStep.field]: currentStep.value as string
-          }
+            [currentStep.field]: currentStep.value as string,
+          },
         }));
       } else if (currentStep.field === 'gender') {
         handleSelectChange('gender', currentStep.value as string);
       } else {
-        setFormData(prev => ({ 
-          ...prev, 
-          [currentStep.field]: currentStep.value as string 
+        setFormData((prev) => ({
+          ...prev,
+          [currentStep.field]: currentStep.value as string,
         }));
       }
 
       // Move to next step
-      setVoiceSimulationStep(prev => prev + 1);
-      
+      setVoiceSimulationStep((prev) => prev + 1);
+
       // Clear focus after a short delay
       setTimeout(() => {
         setCurrentFocusedField(null);
       }, 500);
-      
     }, currentStep.delay);
 
     return () => clearTimeout(timer);
-  }, [isVoiceActive, voiceSimulationStep]);
+  }, [isVoiceActive, voiceSimulationStep, voiceSimulationSteps]);
 
   // Handle voice triage click
   const handleVoiceTriageClick = () => {
-    console.log('Voice Triage Clicked');
     if (!isVoiceActive) {
       setIsVoiceActive(true);
       setVoiceSimulationStep(0);
       setCurrentFocusedField(null);
-      
+
       // Auto-stop after all steps complete
-      const totalDuration = voiceSimulationSteps.reduce((acc, step) => acc + step.delay, 0) + 2000;
+      const totalDuration =
+        voiceSimulationSteps.reduce((acc, step) => acc + step.delay, 0) + 1000;
       setTimeout(() => {
         setIsVoiceActive(false);
         setCurrentFocusedField(null);
         setVoiceSimulationStep(0);
+
+        // Show final evaluation toast
+        // toast to show it's done
+        toast({
+          title: 'AI Triage Completed!',
+          description: "Please access the patient's evaluation.",
+          duration: 5000,
+          className:
+            'border-2 border-cyan-600 bg-gradient-to-tr from-cyan-700 via-emerald-500 to-teal-700 text-white',
+        });
       }, totalDuration);
     } else {
       // Stop simulation
@@ -624,13 +642,12 @@ export function TriageForm({
     }
   };
 
-  
   // THE ENTIRE LOGIC IMITATING A VOICE COMING IN, AND THEN FILLING UP THE FORMS ACCORDINGLY
   // THERE WILL ALSO BE A BORDER FOR EACH INPUT FIELD THAT WILL CHANGE COLOR BASED ON THE 'AI EVALUATION'
   // THE SCROLL POSITION WILL ALSO CHANGE BASED ON WHERE THE 'AI EVALUATION' IS FOCUSED ON
   // const handleVoiceTriageClick = () => {
   //   setIsVoiceActive(!isVoiceActive);
-    
+
   //   // Simulate voice recording duration
   //   if (!isVoiceActive) {
   //     setTimeout(() => {
@@ -669,16 +686,20 @@ export function TriageForm({
                       className='bg-white rounded-full'
                       style={{ width: '3px' }}
                       initial={{ height: 8 }}
-                      animate={isVoiceActive ? {
-                        height: [8, 12 + Math.sin(i * 0.5) * 8, 8],
-                        opacity: [0.4, 1, 0.4],
-                      } : { height: 8, opacity: 0.4 }}
+                      animate={
+                        isVoiceActive
+                          ? {
+                              height: [8, 12 + Math.sin(i * 0.5) * 8, 8],
+                              opacity: [0.4, 1, 0.4],
+                            }
+                          : { height: 8, opacity: 0.4 }
+                      }
                       transition={{
-                        duration: 0.5  + (i * 0.1),
+                        duration: 0.5 + i * 0.1,
                         repeat: isVoiceActive ? Infinity : 0,
                         ease: [0.4, 0, 0.6, 1],
                         delay: i * 0.1,
-                        repeatType: "reverse"
+                        repeatType: 'reverse',
                       }}
                     />
                   ))}
@@ -730,7 +751,7 @@ export function TriageForm({
                   value={formData.gender}
                   onValueChange={(value) => handleSelectChange('gender', value)}
                 >
-                  <SelectTrigger 
+                  <SelectTrigger
                     ref={setInputRef('gender')}
                     className={`w-full ${getFocusBorderClass('gender')}`}
                   >
@@ -801,13 +822,17 @@ export function TriageForm({
               required
             />
           </div>
-          
+
           {/* Pain Level with special handling */}
           <div className='space-y-3'>
             <Label>Pain Level (0-10)</Label>
-            <div 
+            <div
               ref={setInputRef('painLevel')}
-              className={`space-y-2 p-3 rounded-md ${getFocusBorderClass('painLevel') ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
+              className={`space-y-2 p-3 rounded-md ${
+                getFocusBorderClass('painLevel')
+                  ? 'ring-2 ring-blue-500 ring-offset-2'
+                  : ''
+              }`}
             >
               <div className='flex justify-between text-xs text-gray-500'>
                 <span>No Pain</span>
@@ -863,7 +888,10 @@ export function TriageForm({
                   <Label className='text-base'>Blood Pressure</Label>
                   <div className='flex items-center space-x-2'>
                     <div className='space-y-2'>
-                      <Label htmlFor='systolic' className='text-sm text-gray-500'>
+                      <Label
+                        htmlFor='systolic'
+                        className='text-sm text-gray-500'
+                      >
                         Systolic
                       </Label>
                       <Input
@@ -880,7 +908,10 @@ export function TriageForm({
                     </div>
                     <span className='text-xl font-bold mt-6'>/</span>
                     <div className='space-y-2'>
-                      <Label htmlFor='diastolic' className='text-sm text-gray-500'>
+                      <Label
+                        htmlFor='diastolic'
+                        className='text-sm text-gray-500'
+                      >
                         Diastolic
                       </Label>
                       <Input
@@ -937,7 +968,9 @@ export function TriageForm({
                 </div>
 
                 <div className='space-y-4'>
-                  <Label htmlFor='heartRate' className='text-base'>Heart Rate</Label>
+                  <Label htmlFor='heartRate' className='text-base'>
+                    Heart Rate
+                  </Label>
                   <div className='flex items-center space-x-2'>
                     <Input
                       ref={setInputRef('heartRate')}
@@ -981,7 +1014,9 @@ export function TriageForm({
 
               <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                 <div className='space-y-4'>
-                  <Label htmlFor='temperature' className='text-base'>Temperature</Label>
+                  <Label htmlFor='temperature' className='text-base'>
+                    Temperature
+                  </Label>
                   <div className='flex items-center space-x-2'>
                     <Input
                       ref={setInputRef('temperature')}
@@ -1029,7 +1064,9 @@ export function TriageForm({
                 </div>
 
                 <div className='space-y-4'>
-                  <Label htmlFor='spo2' className='text-base'>SpO2</Label>
+                  <Label htmlFor='spo2' className='text-base'>
+                    SpO2
+                  </Label>
                   <div className='flex items-center space-x-2'>
                     <Input
                       ref={setInputRef('spo2')}

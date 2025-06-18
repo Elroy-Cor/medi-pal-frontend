@@ -1,7 +1,7 @@
 "use client";
 
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from 'react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 // Nurse utils
 import { NurseHeader } from "@/components/nurse/nurse-header";
 import { PatientList } from "@/components/nurse/nurse-patient-list";

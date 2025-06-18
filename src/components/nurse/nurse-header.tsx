@@ -1,8 +1,8 @@
-import { ChevronLeft, Search, Stethoscope } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { Search, Stethoscope, ChevronLeft } from 'lucide-react';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
+import Link from 'next/link';
+import Image from 'next/image';
 
 export const NurseHeader = ({
   searchTerm,
