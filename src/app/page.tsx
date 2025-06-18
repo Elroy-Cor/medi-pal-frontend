@@ -9,6 +9,7 @@ import medipalLogo from '@/public/brand-01.png';
 import sghLogo from '@/public/sgh-logo.png';
 import rafflesLogo from '@/public/raffles-logo.png';
 import healthcareProLogo from '@/public/healthcare-pro-logo.png';
+import teamPic from '@/public/team-pic.png';
 // page bg
 import bgImage from '@/public/landing-bg.png';
 import {
@@ -429,29 +430,30 @@ export default function LandingPage() {
       </div>
 
       {/* Video section */}
-        <motion.section
-          initial='hidden'
-          whileInView='visible'
-          viewport={{ once: true, amount: 0.3 }}
-          variants={fadeUpVariants}
-          className='container mx-auto px-4 py-8 text-center'
-        >
-          <div className='max-w-3xl mx-auto'>
-            <h2 className='text-3xl md:text-4xl font-bold mb-6 text-cyan-900'>
-              Watch Our AI Companion in Action
-            </h2>
-            <p className='text-lg text-gray-600 mb-8'>
-              See how Medipal enhances the emergency department experience
-            </p>
-            {/* TODO */}
+      <motion.section
+        initial='hidden'
+        whileInView='visible'
+        viewport={{ once: true, amount: 0.3 }}
+        variants={fadeUpVariants}
+        className='container mx-auto px-4 py-8 text-center'
+      >
+        <div className='max-w-3xl mx-auto'>
+          <h2 className='text-3xl md:text-4xl font-bold mb-6 text-cyan-900'>
+            Watch Our AI Companion in Action
+          </h2>
+          <p className='text-lg text-gray-600 mb-8'>
+            See how Medipal enhances the emergency department experience
+          </p>
+          <div style={{ paddingTop: '56.25%', position: 'relative' }}>
             <iframe
-              src='https://www.youtube.com/embed/your-video-id' // TODO
-              title='Medipal Demo Video'
-              className='w-full aspect-video rounded-lg shadow-lg'
-              allowFullScreen
+              src="https://player.vimeo.com/video/1094540664?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
+              allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+              title="medipal-vid"
             ></iframe>
           </div>
-        </motion.section>
+        </div>
+      </motion.section>
 
       {/* CTA Section */}
       <motion.section
@@ -503,6 +505,43 @@ export default function LandingPage() {
               </motion.div>
             </motion.div>
           </div>
+        </div>
+      </motion.section>
+
+      {/* About the team */}
+      <motion.section
+        initial='hidden'
+        whileInView='visible'
+        viewport={{ once: true, amount: 0.3 }}
+        variants={fadeUpVariants}
+        className='bg-transparent py-16'
+      >
+        <div className='container mx-auto px-4'>
+          <div className='max-w-4xl mx-auto text-center'>
+            <h2 className='text-3xl md:text-4xl font-bold mb-4 text-gray-900'>
+              Meet the Team Behind Medipal
+            </h2>
+            <p className='text-lg text-gray-600'>
+              A dedicated group of healthcare professionals and AI experts
+              committed to improving patient care through technology
+            </p>
+          </div>
+            <motion.div
+              initial='hidden'
+              whileInView='visible'
+              viewport={{ once: true, amount: 0.2 }}
+              variants={fadeUpStaggerVariants}
+              className='bg-transparent text-center'
+            >
+              {/* single team pic */}
+              <Image
+                src={teamPic}
+                alt='Team Medipal'
+                width={1280}
+                height={580}
+                className='w-full rounded-lg'
+              />
+            </motion.div>
         </div>
       </motion.section>
 
