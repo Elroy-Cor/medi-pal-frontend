@@ -1,4 +1,5 @@
 "use client";
+import { user } from "@/app/constants";
 import type { PageType } from "@/app/patient/page";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -216,7 +217,9 @@ export function PatientSidebar({
               </Avatar>
               {isOpen && (
                 <div className="flex-1 text-left min-w-0 ml-3">
-                  <div className="font-medium text-sm truncate">John Smith</div>
+                  <div className="font-medium text-sm truncate">
+                    {user.name}
+                  </div>
                   <div className="text-xs text-slate-500 truncate">
                     My Profile
                   </div>

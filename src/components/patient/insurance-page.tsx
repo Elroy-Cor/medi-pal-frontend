@@ -1,4 +1,5 @@
 "use client";
+import { insurance } from "@/app/constants";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -20,86 +21,33 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 
-interface Insurance {
-  id: string;
-  provider: string;
-  planName: string;
-  policyNumber: string;
-  status: "active" | "expired" | "pending";
-  coverage: string[];
-  deductible: string;
-  copay: string;
-  outOfPocketMax: string;
-  renewalDate: string;
-  monthlyPremium: string;
-}
-
-const mockInsurance: Insurance[] = [
-  {
-    id: "1",
-    provider: "Blue Cross Blue Shield",
-    planName: "Premium Health Plan",
-    policyNumber: "BCBS-2024-789456",
-    status: "active",
-    coverage: [
-      "Emergency Room Visits",
-      "Specialist Consultations",
-      "Prescription Medications",
-      "Preventive Care",
-      "Mental Health Services",
-      "Dental (Basic)",
-      "Vision (Basic)",
-    ],
-    deductible: "$1,500",
-    copay: "$25 (Primary Care), $50 (Specialist)",
-    outOfPocketMax: "$6,000",
-    renewalDate: "2025-01-01",
-    monthlyPremium: "$450",
-  },
-  {
-    id: "2",
-    provider: "Aetna",
-    planName: "Basic Coverage Plan",
-    policyNumber: "AET-2023-123789",
-    status: "expired",
-    coverage: [
-      "Emergency Room Visits",
-      "Primary Care",
-      "Prescription Medications (Generic)",
-      "Preventive Care",
-    ],
-    deductible: "$2,500",
-    copay: "$35 (Primary Care), $75 (Specialist)",
-    outOfPocketMax: "$8,000",
-    renewalDate: "2024-01-01",
-    monthlyPremium: "$320",
-  },
-  {
-    id: "3",
-    provider: "UnitedHealthcare",
-    planName: "Family Plus Plan",
-    policyNumber: "UHC-2025-456123",
-    status: "pending",
-    coverage: [
-      "Emergency Room Visits",
-      "Specialist Consultations",
-      "Prescription Medications",
-      "Preventive Care",
-      "Mental Health Services",
-      "Dental (Comprehensive)",
-      "Vision (Comprehensive)",
-      "Maternity Care",
-    ],
-    deductible: "$1,000",
-    copay: "$20 (Primary Care), $40 (Specialist)",
-    outOfPocketMax: "$5,000",
-    renewalDate: "2025-03-01",
-    monthlyPremium: "$650",
-  },
-];
-
 export function InsurancePage() {
   const [openRows, setOpenRows] = useState<string[]>([]);
+
+  // Transform insurance data for UI compatibility
+  const transformedInsurance = insurance.map((item, index) => ({
+    id: index.toString(),
+    provider: item.provider,
+    planName: item.plan_name,
+    policyNumber: item.policy_number || "Pending",
+    status: item.status.toLowerCase().includes("issued") ? "active" : "pending",
+    coverage: item.coverage,
+    monthlyPremium: `$${item.monthly_premium.toFixed(2)}`,
+    renewalDate: item.renewal_date,
+    financialDetails: item.financial_details,
+  }));
+
+  // Calculate stats
+  const totalPremium = insurance.reduce(
+    (sum, item) => sum + item.monthly_premium,
+    0
+  );
+  const activePolicies = transformedInsurance.filter(
+    (item) => item.status === "active"
+  ).length;
+  const pendingPolicies = transformedInsurance.filter(
+    (item) => item.status === "pending"
+  ).length;
 
   const toggleRow = (id: string) => {
     setOpenRows((prev) =>
@@ -143,7 +91,9 @@ export function InsurancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">$1,420</div>
+            <div className="text-3xl font-bold text-gray-900">
+              ${totalPremium.toFixed(2)}
+            </div>
             <p className="text-sm text-gray-500">Combined monthly premium</p>
           </CardContent>
         </Card>
@@ -156,7 +106,9 @@ export function InsurancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">1</div>
+            <div className="text-3xl font-bold text-gray-900">
+              {activePolicies}
+            </div>
             <p className="text-sm text-gray-500">
               Currently active insurance policies
             </p>
@@ -171,7 +123,9 @@ export function InsurancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">1</div>
+            <div className="text-3xl font-bold text-gray-900">
+              {pendingPolicies}
+            </div>
             <p className="text-sm text-gray-500">
               Policies awaiting activation
             </p>
@@ -198,67 +152,61 @@ export function InsurancePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockInsurance.map((insurance) => (
-                <React.Fragment key={insurance.id}>
+              {transformedInsurance.map((insuranceItem) => (
+                <React.Fragment key={insuranceItem.id}>
                   <TableRow
-                    key={insurance.id}
+                    key={insuranceItem.id}
                     className="cursor-pointer hover:bg-gray-50 data-[state=open]:bg-gray-100"
-                    onClick={() => toggleRow(insurance.id)}
+                    onClick={() => toggleRow(insuranceItem.id)}
                     data-state={
-                      openRows.includes(insurance.id) ? "open" : "closed"
+                      openRows.includes(insuranceItem.id) ? "open" : "closed"
                     }
                   >
                     <TableCell>
-                      {openRows.includes(insurance.id) ? (
+                      {openRows.includes(insuranceItem.id) ? (
                         <ChevronDown className="h-4 w-4" />
                       ) : (
                         <ChevronRight className="h-4 w-4" />
                       )}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {insurance.provider}
+                      {insuranceItem.provider}
                     </TableCell>
-                    <TableCell>{insurance.planName}</TableCell>
+                    <TableCell>{insuranceItem.planName}</TableCell>
                     <TableCell className="font-mono text-sm">
-                      {insurance.policyNumber}
+                      {insuranceItem.policyNumber}
                     </TableCell>
                     <TableCell>
                       <Badge
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${getStatusColor(
-                          insurance.status
+                          insuranceItem.status
                         )}`}
                       >
-                        {insurance.status}
+                        {insuranceItem.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right font-semibold">
-                      {insurance.monthlyPremium}
+                      {insuranceItem.monthlyPremium}
                     </TableCell>
                   </TableRow>
-                  {openRows.includes(insurance.id) && (
-                    <TableRow key={`${insurance.id}-details`}>
+                  {openRows.includes(insuranceItem.id) && (
+                    <TableRow key={`${insuranceItem.id}-details`}>
                       <TableCell colSpan={6} className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="pl-10 grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
                               <DollarSign className="h-4 w-4" />
                               Financial Details
                             </h4>
                             <div className="space-y-1 text-sm">
-                              <p>
-                                <span className="font-medium">Deductible:</span>{" "}
-                                {insurance.deductible}
-                              </p>
-                              <p>
-                                <span className="font-medium">Copay:</span>{" "}
-                                {insurance.copay}
-                              </p>
-                              <p>
-                                <span className="font-medium">
-                                  Out-of-pocket Max:
-                                </span>{" "}
-                                {insurance.outOfPocketMax}
-                              </p>
+                              {Object.entries(
+                                insuranceItem.financialDetails
+                              ).map(([key, value]) => (
+                                <p key={key}>
+                                  <span className="font-medium">{key}:</span>{" "}
+                                  {value || "N/A"}
+                                </p>
+                              ))}
                             </div>
                           </div>
                           <div>
@@ -271,11 +219,11 @@ export function InsurancePage() {
                                 <span className="font-medium">
                                   Renewal Date:
                                 </span>{" "}
-                                {insurance.renewalDate}
+                                {insuranceItem.renewalDate}
                               </p>
                               <p>
                                 <span className="font-medium">Policy:</span>{" "}
-                                {insurance.policyNumber}
+                                {insuranceItem.policyNumber}
                               </p>
                             </div>
                           </div>
@@ -283,16 +231,18 @@ export function InsurancePage() {
                             <h4 className="font-semibold text-gray-700 mb-2">
                               Coverage
                             </h4>
-                            <div className="flex flex-wrap gap-1">
-                              {insurance.coverage.map((item, index) => (
-                                <Badge
-                                  key={index}
-                                  variant="outline"
-                                  className="text-xs"
-                                >
-                                  {item}
-                                </Badge>
-                              ))}
+                            <div className="flex flex-wrap gap-1 max-w-[350px] overflow-hidden">
+                              {insuranceItem.coverage.map(
+                                (item: string, index: number) => (
+                                  <Badge
+                                    key={index}
+                                    variant="outline"
+                                    className="text-xs"
+                                  >
+                                    {item}
+                                  </Badge>
+                                )
+                              )}
                             </div>
                           </div>
                         </div>

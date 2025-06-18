@@ -1,6 +1,6 @@
 "use client";
 
-import { nextOfKin as mockNextOfKin } from "@/app/constants/user";
+import { nextOfKin as mockNextOfKin } from "@/app/constants";
 import { ContactDetailsModal } from "@/components/patient/contact-details-modal";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";

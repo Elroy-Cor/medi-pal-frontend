@@ -28,3 +28,15 @@ export interface NextOfKin {
     roomNumber?: string;
   };
 }
+
+export interface MedicalVisit {
+  id: string;
+  date: string;
+  hospital: string;
+  reason: string;
+  doctor: string;
+  diagnosis: string;
+  treatment: string;
+  followUp: string;
+  status: "completed" | "ongoing" | "scheduled";
+}

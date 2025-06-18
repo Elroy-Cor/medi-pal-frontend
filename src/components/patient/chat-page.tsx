@@ -1,5 +1,5 @@
 "use client";
-import { user } from "@/app/constants/user";
+import { user } from "@/app/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
