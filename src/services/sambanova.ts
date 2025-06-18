@@ -119,69 +119,69 @@ const TOOL_DEFINITIONS = [
 // Tool function implementations - replace these with your actual API calls
 async function aiInsuranceRag(query: string): Promise<string> {
   try {
-    const response = await fetch('/api/insurance-rag', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/insurance-rag", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query }),
     });
-    
+
     if (!response.ok) {
       throw new Error(`Insurance API error: ${response.status}`);
     }
-    
+
     const data = await response.json();
     return JSON.stringify(data);
   } catch (error) {
-    console.error('Error calling insurance RAG:', error);
+    console.error("Error calling insurance RAG:", error);
     return `Error retrieving insurance information: ${error}`;
   }
 }
 
 async function medicalHistoryRag(query: string): Promise<string> {
   try {
-    const response = await fetch('/api/medical-history-rag', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/medical-history-rag", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query }),
     });
-    
+
     if (!response.ok) {
       throw new Error(`Medical History API error: ${response.status}`);
     }
-    
+
     const data = await response.json();
     return JSON.stringify(data);
   } catch (error) {
-    console.error('Error calling medical history RAG:', error);
+    console.error("Error calling medical history RAG:", error);
     return `Error retrieving medical history: ${error}`;
   }
 }
 
 async function medicalReportRag(query: string): Promise<string> {
   try {
-    const response = await fetch('/api/medical-report-rag', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/medical-report-rag", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query }),
     });
-    
+
     if (!response.ok) {
       throw new Error(`Medical Report API error: ${response.status}`);
     }
-    
+
     const data = await response.json();
     return JSON.stringify(data);
   } catch (error) {
-    console.error('Error calling medical report RAG:', error);
+    console.error("Error calling medical report RAG:", error);
     return `Error retrieving medical reports: ${error}`;
   }
 }
 
 // Map tool names to functions
-const toolFunctions: Record<string, Function> = {
-  'ai_insurance_rag': aiInsuranceRag,
-  'medical_history_rag': medicalHistoryRag,
-  'medical_report_rag': medicalReportRag,
+const toolFunctions: Record<string, (query: string) => Promise<string>> = {
+  ai_insurance_rag: aiInsuranceRag,
+  medical_history_rag: medicalHistoryRag,
+  medical_report_rag: medicalReportRag,
 };
 
 class SambaNovaService {
@@ -205,7 +205,7 @@ class SambaNovaService {
         content: SYSTEM_INSTRUCTIONS,
       };
 
-      let messages: SambaNovaMessage[] = [
+      const messages: SambaNovaMessage[] = [
         systemMessage,
         ...conversationHistory,
         {
@@ -241,8 +241,11 @@ class SambaNovaService {
       const assistantMessage = data.choices[0].message;
 
       // Check if the model wants to use tools
-      if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
-        console.log('Tool calls detected:', assistantMessage.tool_calls);
+      if (
+        assistantMessage.tool_calls &&
+        assistantMessage.tool_calls.length > 0
+      ) {
+        console.log("Tool calls detected:", assistantMessage.tool_calls);
 
         // Add assistant message with tool calls to conversation
         messages.push({
@@ -255,14 +258,19 @@ class SambaNovaService {
         for (const toolCall of assistantMessage.tool_calls) {
           const functionName = toolCall.function.name;
           const functionArgs = JSON.parse(toolCall.function.arguments);
-          
-          console.log(`Executing tool: ${functionName} with args:`, functionArgs);
+
+          console.log(
+            `Executing tool: ${functionName} with args:`,
+            functionArgs
+          );
 
           if (toolFunctions[functionName]) {
             try {
               // Call the appropriate function
-              const toolResult = await toolFunctions[functionName](functionArgs.query);
-              
+              const toolResult = await toolFunctions[functionName](
+                functionArgs.query
+              );
+
               // Add tool result to conversation
               messages.push({
                 role: "tool",
@@ -316,7 +324,6 @@ class SambaNovaService {
 
       // No tools needed - return direct response
       return assistantMessage.content;
-
     } catch (error) {
       console.error("Error calling SambaNova API:", error);
       return "I'm sorry, I'm having trouble connecting to my AI service right now. Please try again in a moment, or contact support if the issue persists.";
@@ -331,12 +338,25 @@ class SambaNovaService {
       // For streaming with tools, we need to handle it differently
       // If tools might be needed, fall back to non-streaming
       const possibleToolKeywords = [
-        'insurance', 'coverage', 'claim', 'policy', 'copay', 'deductible',
-        'history', 'diagnosis', 'treatment', 'medication', 'allergy',
-        'report', 'test', 'lab', 'imaging', 'result'
+        "insurance",
+        "coverage",
+        "claim",
+        "policy",
+        "copay",
+        "deductible",
+        "history",
+        "diagnosis",
+        "treatment",
+        "medication",
+        "allergy",
+        "report",
+        "test",
+        "lab",
+        "imaging",
+        "result",
       ];
 
-      const mightNeedTools = possibleToolKeywords.some(keyword => 
+      const mightNeedTools = possibleToolKeywords.some((keyword) =>
         userMessage.toLowerCase().includes(keyword)
       );
 
@@ -410,7 +430,7 @@ class SambaNovaService {
           for (const line of lines) {
             if (line.startsWith("data: ")) {
               const data = line.slice(6).trim();
-              
+
               if (data === "[DONE]") {
                 console.log("Stream completed with [DONE]");
                 return;
@@ -423,6 +443,7 @@ class SambaNovaService {
                   yield content;
                 }
               } catch (parseError) {
+                console.error("Error parsing JSON:", parseError);
                 // Skip invalid JSON lines
                 continue;
               }

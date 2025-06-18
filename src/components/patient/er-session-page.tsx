@@ -85,7 +85,7 @@ export function ERSessionPage() {
 
       return () => clearInterval(interval);
     }
-  }, [sessionStarted, steps.length]);
+  }, [sessionStarted, steps]);
 
   const handleScanQR = () => {
     setSessionStarted(true);
@@ -109,7 +109,7 @@ export function ERSessionPage() {
     }
   };
 
-  const getStepIcon = (step: any, index: number) => {
+  const getStepIcon = (step: (typeof ER_STEPS)[number]) => {
     const IconComponent = step.icon;
     if (step.status === "completed") {
       return <CheckCircle className="h-5 w-5 text-green-600" />;
@@ -306,7 +306,6 @@ export function ERSessionPage() {
             {steps.map((step, index) => {
               const isCompleted = step.status === "completed";
               const isCurrent = step.status === "in-progress";
-              const isUpcoming = step.status === "upcoming";
 
               return (
                 <div
@@ -319,9 +318,7 @@ export function ERSessionPage() {
                       : "border-gray-200 bg-gray-50"
                   }`}
                 >
-                  <div className="flex-shrink-0 mt-1">
-                    {getStepIcon(step, index)}
-                  </div>
+                  <div className="flex-shrink-0 mt-1">{getStepIcon(step)}</div>
                   <div className="flex-grow">
                     <div className="flex items-center justify-between">
                       <h3
@@ -359,7 +356,7 @@ export function ERSessionPage() {
                     {isCurrent && (
                       <div className="mt-3 p-3 bg-white rounded border border-blue-200">
                         <h4 className="font-medium text-blue-800 mb-2">
-                          What's happening now:
+                          What&apos;s happening now:
                         </h4>
                         <p className="text-sm text-blue-700">
                           {step.id === "triage" &&
