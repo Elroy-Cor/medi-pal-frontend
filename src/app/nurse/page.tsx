@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useEffect, useState } from "react";
 // Nurse utils
-import { getPatientStats, randomizePatients } from '@/utils/nurse/nurseUtils';
-import { NurseHeader } from '@/components/nurse/nurse-header';
-import { TriageForm } from '@/components/nurse/triage-form';
-import { SummaryCards } from '@/components/nurse/nurse-summary-cards';
-import { PatientList } from '@/components/nurse/nurse-patient-list';
+import { NurseHeader } from "@/components/nurse/nurse-header";
+import { PatientList } from "@/components/nurse/nurse-patient-list";
+import { SummaryCards } from "@/components/nurse/nurse-summary-cards";
+import { TriageForm } from "@/components/nurse/triage-form";
+import { getPatientStats, randomizePatients } from "@/utils/nurse/nurseUtils";
 // sonner
-import { Toaster } from '@/components/ui/toaster';
-import { useToast } from '@/hooks/use-toast';
-import { initialPatients } from '@/utils/nurse/initialPatients';
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
+import { initialPatients } from "@/utils/nurse/initialPatients";
 
 // types
-import { Patient, Status } from '@/utils/nurse/nurseTypes';
-import { AIChat } from '@/components/nurse/nurse-ai-chat';
-import { FloatingAIButton } from '@/components/nurse/nurse-floating-ai-button';
+import { AIChat } from "@/components/nurse/nurse-ai-chat";
+import { FloatingAIButton } from "@/components/nurse/nurse-floating-ai-button";
+import { Patient, Status } from "@/utils/nurse/nurseTypes";
 
 export default function NurseDashboard() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [showAIChat, setShowAIChat] = useState(false);
   const [triageModalOpen, setTriageModalOpen] = useState(false);
   const [patients, setPatients] = useState(initialPatients);
@@ -68,15 +68,15 @@ export default function NurseDashboard() {
   useEffect(() => {
     const distressedPatients = patients.filter(
       (patient: Patient) =>
-        patient.sentiment === 'distressed' || patient.sentiment === 'angry'
+        patient.sentiment === "distressed" || patient.sentiment === "angry"
     );
 
     if (distressedPatients.length > 0) {
       toast({
-        title: '⚠️ Distressed Patients Detected',
+        title: "⚠️ Distressed Patients Detected",
         description: `There are ${distressedPatients.length} patients showing signs of distress or anger. Please check their status.`,
-        variant: 'destructive',
-        className: 'text-white',
+        variant: "destructive",
+        className: "text-white",
       });
     }
   }, [patients, toast]); // This will run every time patients array changes
@@ -87,15 +87,15 @@ export default function NurseDashboard() {
     const allPatients = Object.values(patients).flat();
     const maxId = Math.max(
       ...allPatients.map((p: Patient) =>
-        Number.parseInt(p.id.replace('P', ''))
+        Number.parseInt(p.id.replace("P", ""))
       ),
       0
     );
-    const newId = `P${String(maxId + 1).padStart(3, '0')}`;
+    const newId = `P${String(maxId + 1).padStart(3, "0")}`;
 
     const currentTimeStr = new Date().toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
+      hour: "2-digit",
+      minute: "2-digit",
     });
 
     const newPatient = {
@@ -124,7 +124,7 @@ export default function NurseDashboard() {
 
     // Show success toast
     toast({
-      title: '✅ Patient Added',
+      title: "✅ Patient Added",
       description: `${patientData.name} has been added to the queue with priority P${patientData.priority}.`,
     });
 
@@ -132,7 +132,7 @@ export default function NurseDashboard() {
   };
 
   return (
-    <div className='min-h-screen bg-gray-50'>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <NurseHeader
         searchTerm={searchTerm}
@@ -154,7 +154,7 @@ export default function NurseDashboard() {
 
       {/* Triage Modal */}
       <Dialog open={triageModalOpen} onOpenChange={setTriageModalOpen}>
-        <DialogContent className='sm:max-w-4xl max-h-[90vh] overflow-y-auto p-0'>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto p-0">
           <TriageForm
             onAddPatient={handleAddPatient}
             onCancel={() => setTriageModalOpen(false)}
