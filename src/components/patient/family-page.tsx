@@ -1,5 +1,6 @@
 "use client";
 
+import { nextOfKin as mockNextOfKin } from "@/app/constants";
 import { ContactDetailsModal } from "@/components/patient/contact-details-modal";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -14,145 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NextOfKin } from "@/types";
 import { AlertCircle, Heart, Mail, Phone, Plus, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-
-interface HospitalStage {
-  stage: string;
-  status: "completed" | "current" | "upcoming";
-  timestamp?: string;
-  description: string;
-  location?: string;
-  doctor?: string;
-  estimatedDuration?: string;
-}
-
-interface NextOfKin {
-  id: string;
-  name: string;
-  relationship: string;
-  phone: string;
-  email: string;
-  address: string;
-  isEmergencyContact: boolean;
-  hospitalStatus: "safe" | "hospitalized" | "unknown";
-  hospitalInfo?: {
-    hospital: string;
-    admissionDate: string;
-    reason: string;
-    currentStage: string;
-    estimatedDischarge?: string;
-    stages: HospitalStage[];
-    emergencyContact?: string;
-    roomNumber?: string;
-  };
-}
-
-const mockNextOfKin: NextOfKin[] = [
-  {
-    id: "1",
-    name: "Jane Smith",
-    relationship: "Spouse",
-    phone: "+1 (555) 123-4568",
-    email: "jane.smith@email.com",
-    address: "123 Main St, City, State 12345",
-    isEmergencyContact: true,
-    hospitalStatus: "safe",
-  },
-  {
-    id: "2",
-    name: "Robert Smith",
-    relationship: "Father",
-    phone: "+1 (555) 987-6543",
-    email: "robert.smith@email.com",
-    address: "456 Oak Ave, City, State 12345",
-    isEmergencyContact: false,
-    hospitalStatus: "safe",
-  },
-  {
-    id: "3",
-    name: "Mary Johnson",
-    relationship: "Sister",
-    phone: "+1 (555) 456-7890",
-    email: "mary.johnson@email.com",
-    address: "789 Pine St, City, State 12345",
-    isEmergencyContact: true,
-    hospitalStatus: "hospitalized",
-    hospitalInfo: {
-      hospital: "City General Hospital",
-      admissionDate: "2024-12-15",
-      reason: "Chest pain and shortness of breath",
-      currentStage: "Recovery",
-      estimatedDischarge: "2024-12-20",
-      roomNumber: "Room 314, Cardiology Wing",
-      emergencyContact: "John Smith (Brother)",
-      stages: [
-        {
-          stage: "Emergency Admission",
-          status: "completed",
-          timestamp: "Dec 15, 2:30 PM",
-          description: "Initial assessment and triage completed",
-          location: "Emergency Department",
-          doctor: "Dr. Sarah Chen",
-        },
-        {
-          stage: "Diagnostic Testing",
-          status: "completed",
-          timestamp: "Dec 15, 4:15 PM",
-          description: "ECG, blood work, and chest X-ray completed",
-          location: "Diagnostic Center",
-          doctor: "Dr. Michael Rodriguez",
-        },
-        {
-          stage: "Treatment",
-          status: "completed",
-          timestamp: "Dec 15, 7:00 PM",
-          description: "Medication administered, condition stabilized",
-          location: "Cardiology Unit",
-          doctor: "Dr. Emily Watson",
-        },
-        {
-          stage: "Recovery",
-          status: "current",
-          timestamp: "Dec 16, 8:00 AM",
-          description:
-            "Patient responding well to treatment, monitoring vitals",
-          location: "Room 314, Cardiology Wing",
-          doctor: "Dr. Emily Watson",
-          estimatedDuration: "2-3 days",
-        },
-        {
-          stage: "Discharge Planning",
-          status: "upcoming",
-          description: "Preparing discharge instructions and follow-up care",
-          location: "Cardiology Wing",
-          doctor: "Dr. Emily Watson",
-          estimatedDuration: "1 day",
-        },
-      ],
-    },
-  },
-  {
-    id: "4",
-    name: "Michael Chen",
-    relationship: "Best Friend",
-    phone: "+1 (555) 321-9876",
-    email: "michael.chen@email.com",
-    address: "321 Elm St, City, State 12345",
-    isEmergencyContact: false,
-    hospitalStatus: "safe",
-  },
-  {
-    id: "5",
-    name: "Sarah Williams",
-    relationship: "Colleague",
-    phone: "+1 (555) 654-3210",
-    email: "sarah.williams@email.com",
-    address: "654 Maple Ave, City, State 12345",
-    isEmergencyContact: true,
-    hospitalStatus: "safe",
-  },
-];
 
 export function FamilyPage() {
   const [nextOfKin, setNextOfKin] = useState<NextOfKin[]>(mockNextOfKin);
@@ -206,7 +71,7 @@ export function FamilyPage() {
   }, []);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Header Section */}
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
@@ -225,7 +90,7 @@ export function FamilyPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-6">
+          <CardContent className="px-2">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Users className="h-5 w-5 text-blue-600" />
@@ -240,7 +105,7 @@ export function FamilyPage() {
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-6">
+          <CardContent className="px-2">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
                 <AlertCircle className="h-5 w-5 text-red-600" />
@@ -255,7 +120,7 @@ export function FamilyPage() {
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-6">
+          <CardContent className="px-2">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                 <Heart className="h-5 w-5 text-green-600" />
@@ -272,8 +137,18 @@ export function FamilyPage() {
       </div>
 
       {/* Emergency Contacts */}
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader className="border-b border-slate-100">
+      <Card
+        className="shadow-sm border-slate-200"
+        style={{
+          gap: 0,
+        }}
+      >
+        <CardHeader
+          className="border-b border-slate-100"
+          style={{
+            paddingBottom: "10px",
+          }}
+        >
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-3">
               <AlertCircle className="h-5 w-5 text-red-600" />
@@ -407,11 +282,27 @@ export function FamilyPage() {
       </Card>
 
       {/* Other Contacts */}
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader className="border-b border-slate-100">
-          <CardTitle className="flex items-center gap-3">
-            <Users className="h-5 w-5 text-slate-600" />
-            Family & Friends
+      <Card
+        className="shadow-sm border-slate-200"
+        style={{
+          gap: 0,
+        }}
+      >
+        <CardHeader
+          className="border-b border-slate-100"
+          style={{
+            paddingBottom: "10px",
+          }}
+        >
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-3">
+              <Users className="h-5 w-5 text-slate-600" />
+              Family & Friends
+            </span>
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Contact
+            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">

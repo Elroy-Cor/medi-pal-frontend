@@ -50,7 +50,7 @@ export function ResearchFindings() {
             Insights from interviews with healthcare professionals and patient
             surveys across multiple institutions.{" "}
             <Link
-              href="/https://docs.google.com/spreadsheets/d/1F5lJeUYFFhjbwgb7kRFgDixxbJqvtqSH-c4q18fgMng/edit?usp=sharing"
+              href="https://docs.google.com/spreadsheets/d/1F5lJeUYFFhjbwgb7kRFgDixxbJqvtqSH-c4q18fgMng/edit?usp=sharing"
               target="_blank"
               className="text-blue-500 underline"
             >

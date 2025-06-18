@@ -3,50 +3,138 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Clock, MapPin, QrCode, Scan } from "lucide-react";
-import { useState } from "react";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Circle,
+  Clock,
+  FileText,
+  MapPin,
+  QrCode,
+  Scan,
+  Stethoscope,
+  User,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+
+const ER_STEPS = [
+  {
+    id: "check-in",
+    title: "Hospital Check-in",
+    description: "Scan QR code at reception",
+    icon: QrCode,
+    status: "waiting",
+  },
+  {
+    id: "triage",
+    title: "Triage Assessment",
+    description: "Initial evaluation by nurse",
+    icon: User,
+    status: "upcoming",
+  },
+  {
+    id: "waiting-room",
+    title: "Waiting Room",
+    description: "Wait for doctor assignment",
+    icon: Clock,
+    status: "upcoming",
+  },
+  {
+    id: "examination",
+    title: "Medical Examination",
+    description: "Doctor consultation and tests",
+    icon: Stethoscope,
+    status: "upcoming",
+  },
+  {
+    id: "treatment",
+    title: "Treatment/Procedure",
+    description: "Receive necessary medical care",
+    icon: AlertTriangle,
+    status: "upcoming",
+  },
+  {
+    id: "discharge",
+    title: "Discharge & Follow-up",
+    description: "Review results and next steps",
+    icon: FileText,
+    status: "upcoming",
+  },
+];
 
 export function ERSessionPage() {
   const [sessionStarted, setSessionStarted] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState<
-    "waiting" | "triaging" | "in-progress" | "completed"
-  >("waiting");
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [steps, setSteps] = useState(ER_STEPS);
+
+  useEffect(() => {
+    if (sessionStarted) {
+      // Simulate automatic progression through steps
+      const interval = setInterval(() => {
+        setCurrentStepIndex((prev) => {
+          if (prev < steps.length - 1) {
+            const newSteps = [...steps];
+            newSteps[prev].status = "completed";
+            newSteps[prev + 1].status = "in-progress";
+            setSteps(newSteps);
+            return prev + 1;
+          }
+          return prev;
+        });
+      }, 8000); // Progress every 8 seconds for demo
+
+      return () => clearInterval(interval);
+    }
+  }, [sessionStarted, steps]);
 
   const handleScanQR = () => {
     setSessionStarted(true);
-    setCurrentStatus("triaging");
-
-    // Simulate status progression
-    setTimeout(() => setCurrentStatus("in-progress"), 5000);
+    const newSteps = [...steps];
+    newSteps[0].status = "completed";
+    newSteps[1].status = "in-progress";
+    setSteps(newSteps);
+    setCurrentStepIndex(1);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStepStatusColor = (status: string) => {
     switch (status) {
-      case "waiting":
-        return "bg-yellow-100 text-yellow-800";
-      case "triaging":
-        return "bg-blue-100 text-blue-800";
-      case "in-progress":
-        return "bg-green-100 text-green-800";
       case "completed":
-        return "bg-gray-100 text-gray-800";
+        return "bg-green-100 text-green-800";
+      case "in-progress":
+        return "bg-blue-100 text-blue-800";
+      case "upcoming":
+        return "bg-gray-100 text-gray-500";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-500";
     }
   };
 
-  const getStatusMessage = (status: string) => {
-    switch (status) {
-      case "waiting":
-        return "Please scan the QR code at the hospital reception";
-      case "triaging":
-        return "You are currently in the triage queue. Please wait for your turn.";
-      case "in-progress":
-        return "You are being seen by medical staff. Please follow their instructions.";
-      case "completed":
-        return "Your ER session has been completed. Please check for any follow-up instructions.";
+  const getStepIcon = (step: (typeof ER_STEPS)[number]) => {
+    const IconComponent = step.icon;
+    if (step.status === "completed") {
+      return <CheckCircle className="h-5 w-5 text-green-600" />;
+    } else if (step.status === "in-progress") {
+      return <IconComponent className="h-5 w-5 text-blue-600" />;
+    } else {
+      return <Circle className="h-5 w-5 text-gray-400" />;
+    }
+  };
+
+  const getCurrentStatusMessage = () => {
+    const currentStep = steps[currentStepIndex];
+    switch (currentStep?.id) {
+      case "triage":
+        return "You are currently in the triage queue. A nurse will assess your condition shortly to determine the urgency of your case.";
+      case "waiting-room":
+        return "Triage completed. You are now waiting to be assigned to a doctor. Please remain in the waiting area.";
+      case "examination":
+        return "You are being seen by a doctor. Please follow their instructions and answer all questions honestly.";
+      case "treatment":
+        return "You are receiving medical treatment. Please remain calm and follow all medical staff instructions.";
+      case "discharge":
+        return "Your treatment is complete. The doctor will review your results and provide discharge instructions.";
       default:
-        return "Unknown status";
+        return "Please scan the QR code at the hospital reception to begin your visit.";
     }
   };
 
@@ -93,57 +181,24 @@ export function ERSessionPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5" />
-                Instructions
+                What to Expect
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    1
+                {ER_STEPS.map((step, index) => (
+                  <div key={step.id} className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">{step.title}</h4>
+                      <p className="text-sm text-gray-600">
+                        {step.description}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold">Arrive at Hospital</h4>
-                    <p className="text-sm text-gray-600">
-                      Go to the emergency room reception desk
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    2
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Scan QR Code</h4>
-                    <p className="text-sm text-gray-600">
-                      Show this QR code to the reception staff or scan it at the
-                      kiosk
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    3
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Wait for Triage</h4>
-                    <p className="text-sm text-gray-600">
-                      You&apos;ll be called for initial assessment based on
-                      urgency
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                    4
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Receive Care</h4>
-                    <p className="text-sm text-gray-600">
-                      Follow medical staff instructions throughout your visit
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -152,7 +207,6 @@ export function ERSessionPage() {
     );
   }
 
-  //TODO: add a real time status update, add more stuff
   return (
     <div className="space-y-6">
       <div>
@@ -164,6 +218,7 @@ export function ERSessionPage() {
         </p>
       </div>
 
+      {/* Current Status Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -174,8 +229,10 @@ export function ERSessionPage() {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <Badge className={getStatusColor(currentStatus)}>
-                {currentStatus.toUpperCase()}
+              <Badge
+                className={getStepStatusColor(steps[currentStepIndex]?.status)}
+              >
+                {steps[currentStepIndex]?.title.toUpperCase()}
               </Badge>
             </div>
             <div className="text-sm text-gray-500">
@@ -184,7 +241,7 @@ export function ERSessionPage() {
           </div>
 
           <div className="p-4 bg-blue-50 rounded-lg">
-            <p className="text-blue-800">{getStatusMessage(currentStatus)}</p>
+            <p className="text-blue-800">{getCurrentStatusMessage()}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -196,11 +253,12 @@ export function ERSessionPage() {
                   {new Date().toLocaleTimeString()}
                 </p>
                 <p>
-                  <span className="font-medium">Estimated Wait:</span> 15-30
-                  minutes
+                  <span className="font-medium">Current Step:</span>{" "}
+                  {currentStepIndex + 1} of {steps.length}
                 </p>
                 <p>
-                  <span className="font-medium">Priority Level:</span> Standard
+                  <span className="font-medium">Estimated Total Time:</span> 2-4
+                  hours
                 </p>
               </div>
             </div>
@@ -219,38 +277,162 @@ export function ERSessionPage() {
                   Room
                 </p>
                 <p>
-                  <span className="font-medium">Room:</span> Waiting Area A
+                  <span className="font-medium">Current Area:</span>{" "}
+                  {steps[currentStepIndex]?.id === "triage"
+                    ? "Triage Bay"
+                    : steps[currentStepIndex]?.id === "waiting-room"
+                    ? "Waiting Area A"
+                    : steps[currentStepIndex]?.id === "examination"
+                    ? "Exam Room 5"
+                    : steps[currentStepIndex]?.id === "treatment"
+                    ? "Treatment Room 2"
+                    : steps[currentStepIndex]?.id === "discharge"
+                    ? "Discharge Area"
+                    : "Reception"}
                 </p>
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {currentStatus === "triaging" && (
-            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <h4 className="font-semibold text-yellow-800 mb-2">
-                Triage Information
-              </h4>
-              <p className="text-yellow-700 text-sm">
-                You are currently in the triage queue. A nurse will assess your
-                condition shortly to determine the urgency of your case. Please
-                remain in the waiting area and listen for your name to be
-                called.
-              </p>
-            </div>
-          )}
+      {/* Step Progress Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Your ER Journey Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {steps.map((step, index) => {
+              const isCompleted = step.status === "completed";
+              const isCurrent = step.status === "in-progress";
 
-          {currentStatus === "in-progress" && (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <h4 className="font-semibold text-green-800 mb-2">
-                Currently Being Seen
-              </h4>
-              <p className="text-green-700 text-sm">
-                You are now being attended to by medical staff. Please follow
-                all instructions given by your healthcare providers. Your
-                session progress will be updated automatically.
+              return (
+                <div
+                  key={step.id}
+                  className={`flex items-start gap-4 p-4 rounded-lg border-2 transition-all ${
+                    isCurrent
+                      ? "border-blue-200 bg-blue-50"
+                      : isCompleted
+                      ? "border-green-200 bg-green-50"
+                      : "border-gray-200 bg-gray-50"
+                  }`}
+                >
+                  <div className="flex-shrink-0 mt-1">{getStepIcon(step)}</div>
+                  <div className="flex-grow">
+                    <div className="flex items-center justify-between">
+                      <h3
+                        className={`font-semibold ${
+                          isCurrent
+                            ? "text-blue-800"
+                            : isCompleted
+                            ? "text-green-800"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {step.title}
+                      </h3>
+                      <Badge className={getStepStatusColor(step.status)}>
+                        {step.status === "in-progress"
+                          ? "Current"
+                          : step.status === "completed"
+                          ? "Done"
+                          : "Upcoming"}
+                      </Badge>
+                    </div>
+                    <p
+                      className={`text-sm mt-1 ${
+                        isCurrent
+                          ? "text-blue-700"
+                          : isCompleted
+                          ? "text-green-700"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {step.description}
+                    </p>
+
+                    {/* Show additional details for current and next step */}
+                    {isCurrent && (
+                      <div className="mt-3 p-3 bg-white rounded border border-blue-200">
+                        <h4 className="font-medium text-blue-800 mb-2">
+                          What&apos;s happening now:
+                        </h4>
+                        <p className="text-sm text-blue-700">
+                          {step.id === "triage" &&
+                            "A nurse will check your vital signs, ask about your symptoms, and assign a priority level based on the severity of your condition."}
+                          {step.id === "waiting-room" &&
+                            "You'll wait in the designated area until a doctor becomes available. Wait times vary based on your priority level and current patient load."}
+                          {step.id === "examination" &&
+                            "The doctor will examine you, review your symptoms, and may order additional tests like blood work, X-rays, or other diagnostic procedures."}
+                          {step.id === "treatment" &&
+                            "Based on your diagnosis, you'll receive appropriate treatment which may include medication, procedures, or observation."}
+                          {step.id === "discharge" &&
+                            "The medical team will review your test results, provide discharge instructions, prescriptions if needed, and schedule any follow-up appointments."}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Show preview for next step */}
+                    {index === currentStepIndex + 1 && (
+                      <div className="mt-3 p-3 bg-gray-50 rounded border border-gray-200">
+                        <h4 className="font-medium text-gray-700 mb-2">
+                          Coming up next:
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {step.id === "triage" &&
+                            "Quick assessment to prioritize your care"}
+                          {step.id === "waiting-room" &&
+                            "Comfortable waiting area while we prepare for your examination"}
+                          {step.id === "examination" &&
+                            "Thorough medical evaluation by our emergency doctor"}
+                          {step.id === "treatment" &&
+                            "Personalized treatment plan based on your diagnosis"}
+                          {step.id === "discharge" &&
+                            "Final review and instructions for your continued care"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Estimated Timeline Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Estimated Timeline
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <p className="font-medium text-green-800">Completed</p>
+              <p className="text-2xl font-bold text-green-600">
+                {steps.filter((s) => s.status === "completed").length}
               </p>
+              <p className="text-green-600">steps</p>
             </div>
-          )}
+            <div className="text-center p-3 bg-blue-50 rounded-lg">
+              <p className="font-medium text-blue-800">Current</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {steps.filter((s) => s.status === "in-progress").length}
+              </p>
+              <p className="text-blue-600">step</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="font-medium text-gray-700">Remaining</p>
+              <p className="text-2xl font-bold text-gray-600">
+                {steps.filter((s) => s.status === "upcoming").length}
+              </p>
+              <p className="text-gray-600">steps</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
