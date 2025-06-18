@@ -1,11 +1,11 @@
 "use client";
 import { user as mockUser } from "@/app/constants";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-
+import melissa from "@/public/melissa.png";
 import {
   Activity,
   Calendar,
@@ -17,6 +17,7 @@ import {
   Shield,
   User,
 } from "lucide-react";
+import Image from "next/image";
 
 export function ProfilePage() {
   return (
@@ -47,10 +48,13 @@ export function ProfilePage() {
             <CardContent className="p-6">
               <div className="flex items-center gap-6 mb-8">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src="/placeholder.svg?height=80&width=80" />
-                  <AvatarFallback className="bg-blue-100 text-blue-700 text-2xl font-medium">
-                    JS
-                  </AvatarFallback>
+                  <Image
+                    src={melissa}
+                    alt="Avatar"
+                    className="rounded-full"
+                    width={80}
+                    height={80}
+                  />
                 </Avatar>
                 <div>
                   <h3 className="text-2xl font-semibold text-slate-800">
