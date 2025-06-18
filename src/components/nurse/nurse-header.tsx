@@ -1,9 +1,10 @@
-import { Search, Stethoscope, ChevronLeft } from 'lucide-react';
-import { Input } from '../ui/input';
-import { Button } from '../ui/button';
-import Link from 'next/link';
-import Image from 'next/image';
-
+import MedipalBrand2 from "@/public/brand-01.png";
+import MedipalBrand from "@/public/brand-4x4.png";
+import { ChevronLeft, Search, Stethoscope } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 export const NurseHeader = ({
   searchTerm,
   setSearchTerm,
@@ -27,7 +28,7 @@ export const NurseHeader = ({
           <div className="hidden sm:flex flex-1 justify-center">
             <Link href={"/"}>
               <Image
-                src={"/brand-01.png"}
+                src={MedipalBrand2}
                 alt="Medipal Logo"
                 width={140}
                 height={140}
@@ -38,7 +39,7 @@ export const NurseHeader = ({
           <div className="flex sm:hidden flex-1 justify-center">
             <Link href={"/"}>
               <Image
-                src={"/brand-4x4.png"}
+                src={MedipalBrand}
                 alt="Medipal Logo"
                 width={25}
                 height={25}
