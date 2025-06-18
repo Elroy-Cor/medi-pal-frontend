@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
     // Forward to your backend
     const backendResponse = await fetch(
-      "https://q8fylg664e.execute-api.us-west-2.amazonaws.com/prod/query",
+      'https://cipz15o8wk.execute-api.us-west-2.amazonaws.com/prod/report_query?Content-Type=application/json',
       {
         method: "POST",
         headers: {

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 import BrandImage from "@/public/brand-01.png";
 import BrandImageSquare from "@/public/brand-4x4.png";
+import melissa from "@/public/melissa.png";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -28,6 +29,7 @@ import {
   Users,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 interface PatientSidebarProps {
   currentPage: PageType;
@@ -95,23 +97,27 @@ export function PatientSidebar({
           >
             {!isOpen && (
               <div className="w-8 h-8 py-2 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Image
-                  src={BrandImageSquare}
-                  alt="medipal logo square"
-                  className="my-2"
-                  width={50}
-                  height={50}
-                />
+                <Link href={"/"}>
+                  <Image
+                    src={BrandImageSquare}
+                    alt="medipal logo square"
+                    className="my-2"
+                    width={50}
+                    height={50}
+                  />
+                </Link>
               </div>
             )}
             {isOpen && (
               <div className="overflow-hidden">
-                <Image
-                  src={BrandImage}
-                  alt="medipal logo"
-                  width={180}
-                  height={200}
-                />
+                <Link href={"/"}>
+                  <Image
+                    src={BrandImage}
+                    alt="medipal logo"
+                    width={180}
+                    height={200}
+                  />
+                </Link>
               </div>
             )}
           </div>
@@ -212,7 +218,12 @@ export function PatientSidebar({
               >
                 <AvatarImage src="/placeholder.svg?height=32&width=32" />
                 <AvatarFallback className="bg-blue-100 text-blue-700 text-sm font-medium">
-                  JS
+                  <Image
+                    src={melissa}
+                    alt="placeholder"
+                    width={32}
+                    height={32}
+                  />
                 </AvatarFallback>
               </Avatar>
               {isOpen && (
