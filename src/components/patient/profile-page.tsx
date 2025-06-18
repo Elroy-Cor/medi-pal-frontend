@@ -20,7 +20,7 @@ import {
 
 export function ProfilePage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Header Section */}
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">

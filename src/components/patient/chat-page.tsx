@@ -649,14 +649,18 @@ export function ChatPage() {
         className={`flex-1 mb-6 shadow-sm border-slate-200 ${
           isVideoActive ? "max-h-64" : ""
         }`}
+        style={{
+          paddingTop: "unset",
+          paddingBottom: "unset",
+        }}
       >
-        <CardContent className="p-6 h-full overflow-hidden">
+        <CardContent className="p-4 h-full overflow-hidden">
           <div className="h-full overflow-y-auto space-y-6 pr-2 max-h-[calc(100vh-24rem)]">
             {messages.map((message) =>
               message.hasButtons ? (
                 <div key={message.id} className="flex justify-start">
                   <div className="max-w-[80%]">
-                    <div className="p-4 rounded-2xl bg-white border border-slate-200 text-slate-800 rounded-bl-md shadow-sm">
+                    <div className="pt-2 pb-2 px-2 rounded-2xl bg-white border border-slate-200 text-slate-800 rounded-bl-md shadow-sm">
                       <div className="flex items-center gap-2 mb-2">
                         {message.type === "voice" && (
                           <Mic className="h-3 w-3 opacity-70" />
@@ -665,8 +669,8 @@ export function ChatPage() {
                           {ensureDate(message.timestamp).toLocaleTimeString()}
                         </span>
                       </div>
-                      <p className="leading-relaxed">{message.text}</p>
-                      <div className="flex gap-2 mt-2 flex-wrap">
+                      <p className="leading-relaxed text-sm">{message.text}</p>
+                      <div className="flex gap-2 mt-2 flex-wrap ">
                         <Button
                           variant="outline"
                           size="sm"
@@ -676,7 +680,7 @@ export function ChatPage() {
                           }
                         >
                           <AlertTriangle className="h-4 w-4 text-red-600" />
-                          <span className="font-semibold text-red-800">
+                          <span className="font-semibold text-red-800 text-xs">
                             Start ER check-in
                           </span>
                         </Button>
@@ -689,7 +693,7 @@ export function ChatPage() {
                           }
                         >
                           <Users className="h-4 w-4 text-blue-600" />
-                          <span className="font-semibold text-blue-800">
+                          <span className="font-semibold text-blue-800 text-xs">
                             Check family members
                           </span>
                         </Button>
@@ -700,7 +704,7 @@ export function ChatPage() {
                           onClick={() => setIsResultsModalOpen(true)}
                         >
                           <FileText className="h-4 w-4 text-green-600" />
-                          <span className="font-semibold text-green-800">
+                          <span className="font-semibold text-green-800 text-xs">
                             View medical reports
                           </span>
                         </Button>

@@ -270,7 +270,7 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="bg-teal-500/20 border-2 border-teal-400/60 text-teal-100 hover:bg-teal-500/20 hover:border-teal-300 hover:text-white backdrop-blur-sm px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <Shield className="w-5 h-5 mr-2" />
                   Healthcare Dashboard
@@ -282,7 +282,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-slate-800 text-white py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <Image

@@ -71,7 +71,7 @@ export function FamilyPage() {
   }, []);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Header Section */}
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
@@ -90,7 +90,7 @@ export function FamilyPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-6">
+          <CardContent className="px-2">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Users className="h-5 w-5 text-blue-600" />
@@ -105,7 +105,7 @@ export function FamilyPage() {
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-6">
+          <CardContent className="px-2">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
                 <AlertCircle className="h-5 w-5 text-red-600" />
@@ -120,7 +120,7 @@ export function FamilyPage() {
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-6">
+          <CardContent className="px-2">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                 <Heart className="h-5 w-5 text-green-600" />
@@ -137,8 +137,18 @@ export function FamilyPage() {
       </div>
 
       {/* Emergency Contacts */}
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader className="border-b border-slate-100">
+      <Card
+        className="shadow-sm border-slate-200"
+        style={{
+          gap: 0,
+        }}
+      >
+        <CardHeader
+          className="border-b border-slate-100"
+          style={{
+            paddingBottom: "10px",
+          }}
+        >
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-3">
               <AlertCircle className="h-5 w-5 text-red-600" />
@@ -272,11 +282,27 @@ export function FamilyPage() {
       </Card>
 
       {/* Other Contacts */}
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader className="border-b border-slate-100">
-          <CardTitle className="flex items-center gap-3">
-            <Users className="h-5 w-5 text-slate-600" />
-            Family & Friends
+      <Card
+        className="shadow-sm border-slate-200"
+        style={{
+          gap: 0,
+        }}
+      >
+        <CardHeader
+          className="border-b border-slate-100"
+          style={{
+            paddingBottom: "10px",
+          }}
+        >
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-3">
+              <Users className="h-5 w-5 text-slate-600" />
+              Family & Friends
+            </span>
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Contact
+            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
