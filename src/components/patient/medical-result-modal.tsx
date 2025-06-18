@@ -51,18 +51,30 @@ export function MedicalResultModal({
     setChatMessages((prev) => [...prev, userMessage]);
     setInputText("");
 
-    // Simulate AI response
+    // Simulate AI response based on the medical report
     setTimeout(() => {
       let aiResponse = "";
-      if (inputText.toLowerCase().includes("cholesterol")) {
+      if (inputText.toLowerCase().includes("cholesterol") || inputText.toLowerCase().includes("lipid")) {
         aiResponse =
-          "Your cholesterol level is 195 mg/dL, which is within the normal range (less than 200 mg/dL). This indicates good cardiovascular health.";
-      } else if (inputText.toLowerCase().includes("vitamin")) {
+          "Your lipid panel shows several concerning findings: Total cholesterol is 218 mg/dL (borderline high), LDL is 142 mg/dL (borderline high), HDL is low at 38 mg/dL, and triglycerides are elevated at 188 mg/dL. This pattern indicates dyslipidemia and increased cardiovascular risk. Your doctor recommends starting statin therapy and adopting a Mediterranean-style diet.";
+      } else if (inputText.toLowerCase().includes("diabetes") || inputText.toLowerCase().includes("glucose") || inputText.toLowerCase().includes("a1c")) {
         aiResponse =
-          "Your Vitamin D level has improved to 35 ng/mL, which is now in the sufficient range (30-100 ng/mL). The supplements are working well!";
+          "Your HbA1c is 6.1%, which places you in the prediabetes range (5.7-6.4%). Your fasting glucose is also elevated at 108 mg/dL. This indicates insulin resistance and significantly increased risk for developing Type 2 diabetes. Immediate lifestyle modifications including reducing refined carbohydrates and increasing physical activity to 150 minutes per week are recommended.";
+      } else if (inputText.toLowerCase().includes("vitamin") || inputText.toLowerCase().includes("deficiency")) {
+        aiResponse =
+          "Your vitamin D level is significantly low at 22 ng/mL, which is considered deficient (normal is 30-100 ng/mL). This deficiency can affect bone health, immune function, and overall wellbeing. Your doctor recommends high-dose supplementation with 5000 IU daily for 12 weeks, followed by 2000 IU maintenance therapy.";
+      } else if (inputText.toLowerCase().includes("iron") || inputText.toLowerCase().includes("anemia") || inputText.toLowerCase().includes("hemoglobin")) {
+        aiResponse =
+          "Your results show iron deficiency anemia with hemoglobin at 12.8 g/dL (low), hematocrit at 38.2% (low), serum iron at 52 μg/dL (low), and ferritin severely low at 8 ng/mL. This indicates significant iron deficiency that requires iron supplementation (Ferrous sulfate 325mg daily) and investigation for potential sources of blood loss, particularly GI bleeding.";
+      } else if (inputText.toLowerCase().includes("liver") || inputText.toLowerCase().includes("alt") || inputText.toLowerCase().includes("ast")) {
+        aiResponse =
+          "Your liver enzymes are elevated: ALT is 68 U/L and AST is 52 U/L (both above normal ranges). This suggests hepatic stress or inflammation. Contributing factors may include alcohol use, medications, fatty liver disease, or other causes. Your doctor recommends alcohol cessation, weight loss if applicable, and avoiding hepatotoxic medications.";
+      } else if (inputText.toLowerCase().includes("inflammation") || inputText.toLowerCase().includes("crp")) {
+        aiResponse =
+          "Your C-Reactive Protein (CRP) is significantly elevated at 4.2 mg/L, indicating high cardiovascular risk (normal is <1.0 mg/L). This suggests systemic inflammation which increases your risk for heart disease and stroke. Recommendations include an anti-inflammatory diet, regular exercise, stress management, and addressing other cardiovascular risk factors.";
       } else {
         aiResponse =
-          "Based on your results, all major indicators are within normal ranges. Your overall health appears good. Is there a specific value you'd like me to explain?";
+          "Your lab results show several areas needing attention: prediabetes (HbA1c 6.1%), dyslipidemia, iron deficiency anemia, vitamin D deficiency, elevated liver enzymes, and high inflammation markers. These findings indicate increased cardiovascular and diabetes risk requiring immediate lifestyle changes and medical management. Which specific area would you like me to explain in more detail?";
       }
 
       const aiMessage: ChatMessage = {
@@ -78,130 +90,27 @@ export function MedicalResultModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[80vw] sm:max-h-[80vh]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[80vw] h-[80vh] max-h-[80vh] flex flex-col p-0">
+        <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
             Blood Test Results - June 18, 2025
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex gap-4 h-full">
+        <div className="flex gap-4 flex-1 min-h-0 p-4">
           {/* PDF Viewer */}
-          <div className="flex-1 bg-gray-100 rounded-lg p-4 overflow-scroll max-h-[calc(100vh-18rem)]">
-            <div className="bg-white p-6 rounded shadow-sm">
-              <div className="text-center mb-6">
-                <h2 className="text-xl font-bold">LABORATORY RESULTS</h2>
-                <p className="text-gray-600">City General Hospital</p>
-                <p className="text-sm text-gray-500">
-                  Patient: John Smith | DOB: 06/15/1985
-                </p>
-                <p className="text-sm text-gray-500">
-                  Date Collected: June 10, 2024
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold border-b pb-2 mb-3">
-                    LIPID PANEL
-                  </h3>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div className="font-medium">Test</div>
-                    <div className="font-medium">Result</div>
-                    <div className="font-medium">Reference Range</div>
-
-                    <div>Total Cholesterol</div>
-                    <div>195 mg/dL</div>
-                    <div>{"<200 mg/dL"}</div>
-
-                    <div>HDL Cholesterol</div>
-                    <div>58 mg/dL</div>
-                    <div>{">40 mg/dL (M), >50 mg/dL (F)"}</div>
-
-                    <div>LDL Cholesterol</div>
-                    <div>118 mg/dL</div>
-                    <div>{"<100 mg/dL"}</div>
-
-                    <div>Triglycerides</div>
-                    <div>95 mg/dL</div>
-                    <div>{"<150 mg/dL"}</div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold border-b pb-2 mb-3">
-                    VITAMINS & MINERALS
-                  </h3>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div className="font-medium">Test</div>
-                    <div className="font-medium">Result</div>
-                    <div className="font-medium">Reference Range</div>
-
-                    <div>Vitamin D, 25-OH</div>
-                    <div>35 ng/mL</div>
-                    <div>30-100 ng/mL</div>
-
-                    <div>Vitamin B12</div>
-                    <div>450 pg/mL</div>
-                    <div>200-900 pg/mL</div>
-
-                    <div>Iron</div>
-                    <div>85 μg/dL</div>
-                    <div>60-170 μg/dL</div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold border-b pb-2 mb-3">
-                    COMPLETE BLOOD COUNT
-                  </h3>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div className="font-medium">Test</div>
-                    <div className="font-medium">Result</div>
-                    <div className="font-medium">Reference Range</div>
-
-                    <div>White Blood Cells</div>
-                    <div>6.8 K/μL</div>
-                    <div>4.0-11.0 K/μL</div>
-
-                    <div>Red Blood Cells</div>
-                    <div>4.7 M/μL</div>
-                    <div>4.2-5.8 M/μL</div>
-
-                    <div>Hemoglobin</div>
-                    <div>14.2 g/dL</div>
-                    <div>13.5-17.5 g/dL</div>
-
-                    <div>Hematocrit</div>
-                    <div>42.1%</div>
-                    <div>41-53%</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 p-4 bg-blue-50 rounded">
-                <h4 className="font-semibold text-blue-800 mb-2">
-                  Physician Notes
-                </h4>
-                <p className="text-blue-700 text-sm">
-                  Overall results show significant improvement. Vitamin D levels
-                  have normalized with supplementation. Cholesterol levels
-                  remain within healthy ranges. Continue current supplement
-                  regimen and maintain healthy lifestyle. Follow-up in 3 months.
-                </p>
-                <p className="text-blue-700 text-sm mt-2">
-                  <strong>Dr. Emily Rodriguez, MD</strong>
-                  <br />
-                  Internal Medicine
-                </p>
-              </div>
-            </div>
+          <div className="flex-1 bg-gray-100 rounded-lg overflow-hidden">
+            <iframe 
+              src="/medical_report.html"
+              className="w-full h-full border-0"
+              title="Medical Results Document"
+            />
           </div>
 
           {/* Chat Interface */}
-          <Card className="w-80 flex flex-col">
-            <CardContent className="px-4 flex flex-col h-full">
+          <Card className="w-80 flex flex-col min-h-0">
+            <CardContent className="px-4 py-4 flex flex-col h-full">
               <div className="flex items-center gap-2 mb-4">
                 <MessageCircle className="h-5 w-5 text-blue-600" />
                 <h3 className="font-semibold">Ask about your results</h3>

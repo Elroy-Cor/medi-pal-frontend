@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRI Lumbar Spine Report</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.4;
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            color: #000;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .hospital-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .department {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .registration {
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        
+        .patient-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            display: flex;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            min-width: 120px;
+            margin-right: 10px;
+        }
+        
+        .section-header {
+            background-color: #e9ecef;
+            padding: 8px 15px;
+            font-weight: bold;
+            font-size: 16px;
+            border-left: 4px solid #007bff;
+            margin: 20px 0 10px 0;
+        }
+        
+        .exam-details {
+            margin: 15px 0;
+        }
+        
+        .technique-list {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .technique-list li {
+            margin-bottom: 3px;
+        }
+        
+        .findings {
+            margin: 15px 0;
+        }
+        
+        .findings p {
+            margin-bottom: 8px;
+            text-align: justify;
+        }
+        
+        .summary-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-left: 4px solid #f39c12;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .signature-section {
+            margin-top: 40px;
+            border-top: 1px solid #dee2e6;
+            padding-top: 20px;
+        }
+        
+        .signature-box {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .highlight {
+            font-weight: bold;
+        }
+        
+        .image-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .image-placeholder {
+            margin: 15px 0;
+        }
+        
+        .image-frame {
+            max-width: 400px;
+            margin: 0 auto;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            .patient-info, .summary-box, .signature-box {
+                background-color: white !important;
+                border: 1px solid #000 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="hospital-name">RAFFLES DIAGNOSTICA</div>
+        <div>Raffles Hospital, Singapore</div>
+        <div class="department">RADIOLOGY DEPARTMENT</div>
+        <div class="registration">Company Registration No.: 199202734G</div>
+    </div>
+
+    <div class="patient-info">
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Patient Name:</span>
+                <span>Tan Jie Feng Melissa</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Sex:</span>
+                <span>Female</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Age:</span>
+                <span>28 years</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">NRIC:</span>
+                <span>S0025698J</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Clinic Visit No.:</span>
+                <span>505725003338</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Accession No.:</span>
+                <span>2563001069932</span>
+            </div>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Date of Examination:</span>
+                <span>09 June 2023</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Referring Doctor:</span>
+                <span>Dr. Ng Puay Yong</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Referring Clinic:</span>
+                <span>Raffles Neuroscience Centre</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Performing Centre:</span>
+                <span>Radiology (Raffles Hospital)</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-header">EXAMINATION</div>
+    <div class="exam-details">
+        <p><strong>MRI Lumbar Spine</strong></p>
+        
+        <div class="image-container">
+            <div class="image-placeholder">
+                <p><strong>MRI Image</strong></p>
+                <p style="font-style: italic; color: #666; font-size: 14px;">
+                    MRI Lumbar Spine - Sagittal View
+                </p>
+                <div class="image-frame">
+                    <img src="./spinal_image.png" alt="MRI Lumbar Spine - Sagittal View" style="width: 100%; height: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-header">TECHNIQUE</div>
+    <div class="exam-details">
+        <p>Multiplanar MRI with the following sequences:</p>
+        <ul class="technique-list">
+            <li>Sagittal T1, T2</li>
+            <li>Coronal STIR</li>
+            <li>Axial T2</li>
+        </ul>
+    </div>
+
+    <div class="section-header">COMPARISON</div>
+    <div class="exam-details">
+        <p>No relevant prior studies available.</p>
+    </div>
+
+    <div class="section-header">SUMMARY</div>
+    <div class="summary-box">
+        <p><strong>L5-S1:</strong> Mild disc bulge indenting the thecal sac. Mild bilateral facet arthrosis.</p>
+    </div>
+
+    <div class="section-header">FINDINGS</div>
+    <div class="findings">
+        <p>The lumbar vertebrae are labelled from C3. The last unfused lumbar vertebra is considered L5.</p>
+        
+        <p>The conus medullaris terminates at the L1 level and demonstrates normal signal intensity.</p>
+        
+        <p>Vertebral heights, cortical outline, and marrow signal are preserved.</p>
+        
+        <p>Straightening of the lumbar spine is noted.</p>
+        
+        <p>Mild disc bulge at <span class="highlight">L5-S1</span>, indenting the thecal sac with <span class="highlight">mild bilateral facet arthrosis</span>.</p>
+        
+        <p>No other significant posterior disc bulges detected.</p>
+        
+        <p>Neural foramina are patent.</p>
+        
+        <p>Facet joints and ligamentum flavum are unremarkable.</p>
+        
+        <p>Prevertebral soft tissue is not thickened.</p>
+        
+        <p>No abnormal signal in the spinal canal.</p>
+        
+        <p>Sagittal bony canal dimensions are preserved.</p>
+    </div>
+
+    <div class="signature-section">
+        <div class="section-header">REPORTING RADIOLOGIST</div>
+        <div class="signature-box">
+            <p><strong>Dr. Amogh Narayan Hegde</strong><br>
+            MBBS (India), FRCR (UK)<br>
+            Consultant, Radiology Department</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -80,7 +80,7 @@ class SambaNovaService {
     }
   }
 
-  async *sendMessageStream(
+  async *sendPatientMessageStream(
     userMessage: string, 
     conversationHistory: SambaNovaMessage[] = []
   ): AsyncGenerator<string, void, unknown> {

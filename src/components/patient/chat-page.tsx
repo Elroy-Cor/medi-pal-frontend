@@ -466,7 +466,7 @@ export function ChatPage() {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Stream the response from SambaNova
-      const stream = sambaNovaService.sendMessageStream(userMessage);
+      const stream = sambaNovaService.sendPatientMessageStream(userMessage);
       let streamedText = "";
 
       for await (const chunk of stream) {
