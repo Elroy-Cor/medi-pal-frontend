@@ -87,7 +87,7 @@ export default function LandingPage() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="container mx-auto px-4 py-6"
       >
-        <nav className="flex items-center justify-between">
+        <nav className="flex flex-col sm:flex-row items-center justify-between">
           <div className="flex items-center space-x-2">
             <Image src={medipalLogo} alt="Medipal" width={180} height={32} />
           </div>
@@ -134,7 +134,7 @@ export default function LandingPage() {
           {/* Main CTAs */}
           <motion.div
             variants={fadeUpStaggerVariants}
-            className="flex flex-row gap-4 justify-center mb-10"
+            className="flex flex-col max-sm:items-center sm:flex-row gap-4 justify-center mb-10"
           >
             {/* nurse */}
             <Link href="/nurse">
@@ -183,7 +183,7 @@ export default function LandingPage() {
               <p className="text-sm text-slate-600 mb-2">
                 Research conducted with
               </p>
-              <div className="flex items-center justify-center space-x-4 sm:space-x-8 text-gray-500">
+              <div className="flex flex-col sm:flex-row items-center justify-center space-x-4 sm:space-x-8 text-gray-500">
                 <Image
                   src={sghLogo}
                   alt="Singapore General Hospital"
@@ -483,7 +483,7 @@ export default function LandingPage() {
               whileInView="visible"
               viewport={{ once: true, amount: 0.5 }}
               variants={staggerContainerVariants}
-              className="flex flex-row gap-4 justify-center"
+              className="flex flex-col max-sm:items-center sm:flex-row gap-4 justify-center"
             >
               <motion.div variants={fadeUpStaggerVariants}>
                 <Link href="/nurse">
