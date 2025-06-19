@@ -111,6 +111,7 @@ export function PatientSidebar({
             {isOpen && (
               <div className="overflow-hidden">
                 <Link href={"/"}>
+                  {/*TODO: if mobile show diff logo */}
                   <Image
                     src={BrandImage}
                     alt="medipal logo"
@@ -127,7 +128,7 @@ export function PatientSidebar({
             variant="ghost"
             size="sm"
             onClick={toggleSidebar}
-            className={`h-6 w-6 p-0  flex-shrink-0 transition-all duration-200 ${
+            className={`h-12 w-12 p-0  flex-shrink-0 transition-all duration-200 ${
               !isOpen ? "ml-0" : ""
             }`}
           >
@@ -140,16 +141,16 @@ export function PatientSidebar({
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="p-4">
-        <div className="space-y-2">
+      <SidebarContent className="p-3 md:p-4">
+        <div className="space-y-1 md:space-y-2">
           <SidebarMenu>
             {mainMenuItems.map((item) => (
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton
                   isActive={currentPage === item.id}
                   onClick={() => onPageChange(item.id)}
-                  className={`w-full px-3 rounded-xl transition-all duration-200 ${
-                    isOpen ? "h-12" : "h-10 justify-center"
+                  className={`w-full px-2 md:px-3 rounded-xl transition-all duration-200 ${
+                    isOpen ? "h-10 md:h-12" : "h-8 md:h-10 justify-center"
                   } ${
                     currentPage === item.id
                       ? "bg-blue-50 text-blue-700 border border-blue-200 shadow-sm"
@@ -158,27 +159,19 @@ export function PatientSidebar({
                   tooltip={!isOpen ? item.title : undefined}
                 >
                   <item.icon
-                    className={`h-5 w-5 flex-shrink-0 ${
+                    className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 ${
                       currentPage === item.id
                         ? "text-blue-600"
                         : "text-slate-500"
                     }`}
                   />
                   {isOpen && (
-                    <div className="flex-1 text-left min-w-0 ml-3">
-                      <div className="font-medium text-sm truncate">
+                    <div className="flex-1 text-left min-w-0 ml-2 md:ml-3">
+                      <div className="font-medium text-xs md:text-sm truncate">
                         {item.title}
                       </div>
                     </div>
                   )}
-                  {/* {item.id === "er-session" && isOpen && (
-                    <Badge
-                      variant="outline"
-                      className="bg-red-50 text-red-600 border-red-200 text-xs flex-shrink-0"
-                    >
-                      Emergency
-                    </Badge>
-                  )} */}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
@@ -186,16 +179,17 @@ export function PatientSidebar({
         </div>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-slate-100 p-4">
+      <SidebarFooter className="border-t border-slate-100 p-3 md:p-4">
         <SidebarMenuButton
           tooltip={!isOpen ? "Back to home" : undefined}
           onClick={() => {
             //route to home page
             router.push("/");
           }}
+          className="mb-2"
         >
           <div className="flex items-center justify-center">
-            <ArrowLeft className="h-4 w-4 text-slate-400 mr-2" />
+            <ArrowLeft className="h-3 w-3 md:h-4 md:w-4 text-slate-400 mr-2" />
             {isOpen && <span className="text-xs">Back to home</span>}
           </div>
         </SidebarMenuButton>
@@ -204,8 +198,8 @@ export function PatientSidebar({
             <SidebarMenuButton
               isActive={currentPage === "profile"}
               onClick={() => onPageChange("profile")}
-              className={`w-full px-3 rounded-xl transition-all duration-200 ${
-                isOpen ? "h-14" : "h-10 justify-center"
+              className={`w-full px-2 md:px-3 rounded-xl transition-all duration-200 ${
+                isOpen ? "h-12 md:h-14" : "h-8 md:h-10 justify-center"
               } ${
                 currentPage === "profile"
                   ? "bg-slate-100 text-slate-800"
@@ -214,10 +208,12 @@ export function PatientSidebar({
               tooltip={!isOpen ? "My Profile" : undefined}
             >
               <Avatar
-                className={`flex-shrink-0 ${isOpen ? "h-8 w-8" : "h-6 w-6"}`}
+                className={`flex-shrink-0 ${
+                  isOpen ? "h-6 w-6 md:h-8 md:w-8" : "h-5 w-5 md:h-6 md:w-6"
+                }`}
               >
                 <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                <AvatarFallback className="bg-blue-100 text-blue-700 text-sm font-medium">
+                <AvatarFallback className="bg-blue-100 text-blue-700 text-xs md:text-sm font-medium">
                   <Image
                     src={melissa}
                     alt="placeholder"
@@ -227,8 +223,8 @@ export function PatientSidebar({
                 </AvatarFallback>
               </Avatar>
               {isOpen && (
-                <div className="flex-1 text-left min-w-0 ml-3">
-                  <div className="font-medium text-sm truncate">
+                <div className="flex-1 text-left min-w-0 ml-2 md:ml-3">
+                  <div className="font-medium text-xs md:text-sm truncate">
                     {user.name}
                   </div>
                   <div className="text-xs text-slate-500 truncate">
@@ -237,7 +233,7 @@ export function PatientSidebar({
                 </div>
               )}
               {isOpen && (
-                <User className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                <User className="h-3 w-3 md:h-4 md:w-4 text-slate-400 flex-shrink-0" />
               )}
             </SidebarMenuButton>
           </SidebarMenuItem>

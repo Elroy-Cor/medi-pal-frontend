@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { TypingIndicator } from "@/components/ui/typing-indicator";
 import { sambaNovaService } from "@/services/sambanova";
+import { currentStepIndexAtom, sessionStartedAtom } from "@/store/er-session";
+import { getDefaultStore } from "jotai";
 import {
   Activity,
   AlertTriangle,
@@ -23,8 +25,6 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { MedicalResultModal } from "./medical-result-modal";
 import VideoChat, { VideoChatRef } from "./video-chat";
-import { sessionStartedAtom, currentStepIndexAtom } from "@/store/er-session";
-import { getDefaultStore } from "jotai";
 
 interface Message {
   id: string;
@@ -774,24 +774,26 @@ Please proceed to the hospital reception and scan the QR code to begin your visi
 
   console.log("messages", messages);
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-full lg:h-[calc(100vh-4rem)] md:h-[calc(100vh-8rem)]">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <Sparkles className="h-6 w-6 text-white" />
+      <div className="flex items-center justify-between mb-4 md:mb-8 flex-wrap gap-4">
+        <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Sparkles className="h-4 w-4 md:h-6 md:w-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-800">Health Buddy</h1>
-            <p className="text-xs text-slate-600 mt-1">
+          <div className="min-w-0">
+            <h1 className="text-sm text-wrap md:text-3xl font-bold text-slate-800 truncate">
+              Health Buddy
+            </h1>
+            <p className="text-xs text-slate-600 mt-1 hidden sm:block">
               Your personal healthcare companion
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-full">
-            <Activity className="h-4 w-4 text-green-600" />
-            <span className="text-sm font-medium text-green-700">
+        <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+          <div className="flex items-center gap-2 px-2 md:px-3 py-1.5 bg-green-50 border border-green-200 rounded-full">
+            <Activity className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
+            <span className="text-xs md:text-sm font-medium text-green-700">
               {connectionState === "connected"
                 ? "Connected"
                 : clientSecret
@@ -801,15 +803,15 @@ Please proceed to the hospital reception and scan the QR code to begin your visi
           </div>
           <Badge
             variant={isVoiceMode ? "default" : "secondary"}
-            className="px-3 py-1 rounded-full"
+            className="px-2 md:px-3 py-1 rounded-full text-xs md:text-sm"
           >
-            {isVoiceMode ? "🎤 Voice Mode" : "💬 Text Mode"}
+            {isVoiceMode ? "🎤 Voice" : "💬 Text"}
           </Badge>
           <Button
             variant={isVoiceMode ? "default" : "outline"}
             size="sm"
             onClick={toggleVoiceMode}
-            className="rounded-full"
+            className="rounded-full p-2 md:px-3"
             disabled={!clientSecret}
             title={
               !clientSecret
@@ -820,9 +822,9 @@ Please proceed to the hospital reception and scan the QR code to begin your visi
             }
           >
             {isVoiceMode ? (
-              <Volume2 className="h-4 w-4" />
+              <Volume2 className="h-3 w-3 md:h-4 md:w-4" />
             ) : (
-              <Mic className="h-4 w-4" />
+              <Mic className="h-3 w-3 md:h-4 md:w-4" />
             )}
           </Button>
           {isVoiceMode && (
@@ -830,12 +832,12 @@ Please proceed to the hospital reception and scan the QR code to begin your visi
               variant={isVideoActive ? "default" : "outline"}
               size="sm"
               onClick={toggleVideo}
-              className="rounded-full"
+              className="rounded-full p-2 md:px-3"
             >
               {isVideoActive ? (
-                <Video className="h-4 w-4" />
+                <Video className="h-3 w-3 md:h-4 md:w-4" />
               ) : (
-                <VideoOff className="h-4 w-4" />
+                <VideoOff className="h-3 w-3 md:h-4 md:w-4" />
               )}
             </Button>
           )}
@@ -843,24 +845,24 @@ Please proceed to the hospital reception and scan the QR code to begin your visi
             variant="outline"
             size="sm"
             onClick={clearMessages}
-            className="rounded-full"
+            className="rounded-full p-2 md:px-3"
             title="Clear chat history"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
           </Button>
         </div>
       </div>
 
       {/* Video Chat Container */}
       {isVoiceMode && isVideoActive && (
-        <Card className="mb-6 shadow-xl border-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
-          <CardContent>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                <Video className="h-5 w-5 text-blue-600" />
-                Dr. MediPal - Your AI Health Assistant
+        <Card className="mb-4 md:mb-6 shadow-xl border-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
+          <CardContent className="p-3 md:p-6">
+            <div className="flex items-center justify-between mb-3 md:mb-4 flex-wrap gap-2">
+              <h3 className="text-sm md:text-lg font-semibold text-slate-800 flex items-center gap-2 min-w-0">
+                <Video className="h-4 w-4 md:h-5 md:w-5 text-blue-600 flex-shrink-0" />
+                <span className="truncate">Dr. MediPal - AI Assistant</span>
               </h3>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 md:gap-3 flex-wrap">
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 border border-green-200 rounded-full">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                   <span className="text-sm font-medium text-green-700">
@@ -877,7 +879,7 @@ Please proceed to the hospital reception and scan the QR code to begin your visi
 
             <div
               className="relative bg-gradient-to-b from-blue-50 to-indigo-100 rounded-xl overflow-hidden border-2 border-white shadow-inner"
-              style={{ height: "65vh" }}
+              style={{ height: window.innerWidth < 768 ? "50vh" : "65vh" }}
             >
               <VideoChat
                 ref={videoChatRef}
@@ -955,19 +957,19 @@ Please proceed to the hospital reception and scan the QR code to begin your visi
       {/* Chat Messages - Hidden during video call */}
       {!(isVoiceMode && isVideoActive) && (
         <Card
-          className="flex-1 mb-6 shadow-sm border-slate-200"
+          className="flex-1 mb-4 md:mb-6 shadow-sm border-slate-200"
           style={{
             paddingTop: "unset",
             paddingBottom: "unset",
           }}
         >
-          <CardContent className="p-4 h-full overflow-hidden">
-            <div className="h-full overflow-y-auto space-y-2 pr-2 max-h-[calc(100vh-24rem)]">
+          <CardContent className="p-3 md:p-4 h-full overflow-hidden">
+            <div className="h-full overflow-y-auto space-y-2 pr-1 md:pr-2 max-h-[calc(100vh-20rem)] md:max-h-[calc(100vh-24rem)]">
               {messages.map((message) =>
                 message.hasButtons ? (
                   <div key={message.id} className="flex justify-start">
-                    <div className="max-w-[80%]">
-                      <div className="pt-2 pb-2 px-2 rounded-2xl bg-white border border-slate-200 text-slate-800 rounded-bl-md shadow-sm">
+                    <div className="max-w-[85%] sm:max-w-[80%]">
+                      <div className="pt-2 pb-2 px-3 md:px-4 rounded-2xl bg-white border border-slate-200 text-slate-800 rounded-bl-md shadow-sm">
                         <div className="flex items-center gap-2 mb-2">
                           {message.type === "voice" && (
                             <Mic className="h-3 w-3 opacity-70" />
@@ -979,7 +981,7 @@ Please proceed to the hospital reception and scan the QR code to begin your visi
                         <p className="leading-relaxed text-sm">
                           {message.text}
                         </p>
-                        <div className="flex gap-2 mt-2 flex-wrap ">
+                        <div className="flex gap-1 md:gap-2 mt-2 flex-wrap">
                           <Button
                             variant="outline"
                             size="sm"

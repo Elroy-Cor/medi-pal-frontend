@@ -49,54 +49,62 @@ export function MedicalHistoryPage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
-          <FileText className="h-6 w-6 text-white" />
+        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+          <FileText className="h-4 w-4 md:h-6 md:w-6 text-white" />
         </div>
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Medical History</h1>
-          <p className="text-xs text-slate-600 mt-1">
+        <div className="min-w-0">
+          <h1 className="text-sm text-wrap md:text-3xl font-bold text-slate-800 truncate">
+            Medical History
+          </h1>
+          <p className="text-xs text-slate-600 mt-1 hidden sm:block">
             Your complete medical visit history and records
           </p>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-6">
         <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-6">
+          <CardContent className="px-2 md:p-6">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                 <Calendar className="h-5 w-5 text-green-600" />
               </div>
-              <div>
+              <div className="flex flex-row md:flex-col gap-2 md:gap-0">
                 <p className="text-2xl font-bold text-slate-800">4</p>
-                <p className="text-sm text-slate-600">Total Visits</p>
+                <p className="text-sm text-slate-600 self-center md:self-start">
+                  Total Visits
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-6">
+          <CardContent className="px-2 md:p-6">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Clock className="h-5 w-5 text-blue-600" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-slate-800">1</p>
-                <p className="text-sm text-slate-600">Ongoing Care</p>
+                <p className="text-sm text-slate-600 self-center md:self-start">
+                  Ongoing Care
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card className="border-slate-200 shadow-sm">
-          <CardContent className="p-6">
+          <CardContent className="px-2 md:p-6">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
                 <User className="h-5 w-5 text-amber-600" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-slate-800">3</p>
-                <p className="text-sm text-slate-600">Doctors Seen</p>
+                <p className="text-sm text-slate-600 self-center md:self-start">
+                  Doctors Seen
+                </p>
               </div>
             </div>
           </CardContent>

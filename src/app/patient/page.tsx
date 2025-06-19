@@ -1,5 +1,4 @@
 "use client";
-
 import { ChatPage } from "@/components/patient/chat-page";
 import { ERSessionPage } from "@/components/patient/er-session-page";
 import { FamilyPage } from "@/components/patient/family-page";
@@ -9,9 +8,18 @@ import { MedicalResultModal } from "@/components/patient/medical-result-modal";
 import { PatientSidebar } from "@/components/patient/patient-sidebar";
 import { ProfilePage } from "@/components/patient/profile-page";
 import { WellnessCheck } from "@/components/patient/wellness-check";
-import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
+import {
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import medipalLogo from "@/public/brand-01.png";
+import { Menu } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 export type PageType =
@@ -27,6 +35,7 @@ function PatientPortalContent() {
   const [showMedicalResult, setShowMedicalResult] = useState(false);
   const { toast } = useToast();
   const { open } = useSidebar();
+  const isMobileDevice = useIsMobile();
 
   // Simulate medical result notification
   useEffect(() => {
@@ -70,19 +79,35 @@ function PatientPortalContent() {
   return (
     <div className="flex min-h-screen w-full bg-slate-50 relative">
       <PatientSidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-      <main
-        className={`flex-1 overflow-auto transition-all duration-300 ${
-          open ? "ml-0" : "ml-0"
-        }`}
-      >
+
+      {/* Mobile Header with Menu Toggle */}
+      {isMobileDevice && (
+        <div className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-slate-200 px-4 py-1 md:py-3 flex items-center justify-between lg:hidden">
+          <SidebarTrigger className="p-2 hover:bg-slate-100 rounded-md">
+            <Menu className="h-5 w-5" />
+          </SidebarTrigger>
+          <Image src={medipalLogo} alt="Medipal" width={120} height={32} />
+          <div className="w-9" />
+        </div>
+      )}
+
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <div
-          className={`p-8 mx-auto transition-all duration-300 ${
-            open ? "pr-8" : "pl-14"
-          }`}
+          className={`flex-1 overflow-auto ${isMobileDevice ? "pt-16" : ""}`}
         >
-          {renderCurrentPage()}
+          <div
+            className={cn(
+              "h-full transition-all duration-300",
+              isMobileDevice ? "p-4" : "p-6 md:p-8",
+              // Only add left padding on desktop when sidebar is collapsed
+              !isMobileDevice && !open ? "pl-20" : ""
+            )}
+          >
+            {renderCurrentPage()}
+          </div>
         </div>
       </main>
+
       <MedicalResultModal
         open={showMedicalResult}
         onOpenChange={setShowMedicalResult}
