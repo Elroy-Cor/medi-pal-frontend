@@ -158,6 +158,7 @@ export default function LandingPage() {
                   For Patients
                 </Button>
               </div>
+
               <motion.p
                 className="text-xs text-cyan-800 mt-1 font-semibold"
                 animate={{
@@ -211,6 +212,12 @@ export default function LandingPage() {
             </motion.div>
           </Link>
         </div>
+        <p className="mt-10 text-sm text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+          Contact us for a Demo at{" "}
+          <a href="mailto:andre.wong.yz@gmail.com" className="text-cyan-700">
+            andre.wong.yz@gmail.com
+          </a>
+        </p>
       </motion.section>
 
       {/* Problem & Solution */}
@@ -571,6 +578,15 @@ export default function LandingPage() {
             />
             <p className="text-gray-400 mb-6">
               Augmenting human care with AI-powered patient support
+            </p>
+            <p className="text-sm text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+              Contact us for a Demo at{" "}
+              <a
+                href="mailto:andre.wong.yz@gmail.com"
+                className="text-cyan-700"
+              >
+                andre.wong.yz@gmail.com
+              </a>
             </p>
             <p className="text-sm text-gray-500">
               © 2025 Medipal. Built with research from Singapore General
