@@ -31,13 +31,13 @@ export function SummaryCards({
         <Card className='h-[80px] sm:h-[80px] sm:col-span-2 lg:col-span-1'>
           <CardContent className='p-2 sm:p-4 h-full'>
             <div className='flex flex-row items-center justify-between h-full'>
-              <div className='flex items-center space-x-2'>
-                <Users className='w-6 h-6 text-emerald-600 flex-shrink-0' />
+              <div className='flex flex-col sm:flex-row sm:items-center space-x-2'>
+                <Users className='w-4 h-4 md:w-5 md:h-5 text-emerald-600 flex-shrink-0' />
                 <p className='text-xs sm:text-sm font-medium text-gray-600 truncate'>
                   Total Patients
                 </p>
               </div>
-              <p className='text-lg font-bold text-gray-900 mt-1'>
+              <p className='text-sm sm:text-lg font-bold text-gray-900 mt-1'>
                 {totalPatients}
               </p>
             </div>
@@ -48,13 +48,13 @@ export function SummaryCards({
         <Card className='h-[80px] sm:h-[80px] sm:col-span-2 lg:col-span-1'>
           <CardContent className='p-2 sm:p-4 h-full'>
             <div className='flex flex-row items-center justify-between h-full'>
-              <div className='flex items-center space-x-2'>
-                <BedDouble className='w-6 h-6 text-cyan-600 flex-shrink-0' />
+              <div className='flex flex-col sm:flex-row sm:items-center space-x-2'>
+                <BedDouble className='w-4 h-4 md:w-5 md:h-5 text-cyan-600 flex-shrink-0' />
                 <p className='text-xs sm:text-sm font-medium text-gray-600 truncate'>
                   Beds Occupied
                 </p>
               </div>
-              <p className='text-lg font-bold text-gray-900 mt-1'>
+              <p className='text-sm sm:text-lg font-bold text-gray-900 mt-1'>
                 {beddedPatients}
               </p>
             </div>
@@ -65,13 +65,13 @@ export function SummaryCards({
         <Card className='h-[80px] sm:h-[80px] sm:col-span-2 lg:col-span-1'>
           <CardContent className='p-2 sm:p-4 h-full'>
             <div className='flex flex-row items-center justify-between h-full'>
-              <div className='flex items-center space-x-2'>
-                <Clock className='w-6 h-6 text-teal-600 flex-shrink-0' />
-                <p className='text-xs sm:text-sm font-medium text-gray-600 truncate'>
-                  Avg Wait
+              <div className='flex flex-col sm:flex-row sm:items-center space-x-2'>
+                <Clock className='w-4 h-4 md:w-5 md:h-5 text-teal-600 flex-shrink-0' />
+                <p className='text-xs sm:text-sm font-medium text-gray-600 truncate text-wrap w-fit'>
+                  Avg Wait Time
                 </p>
               </div>
-              <p className='text-lg font-bold mt-1 truncate'>
+              <p className='text-sm sm:text-lg font-bold mt-1 truncate'>
                 {formatTime(avgWaitTime)}
               </p>
             </div>
@@ -82,15 +82,15 @@ export function SummaryCards({
         <Card className='h-[80px] sm:h-[80px] sm:col-span-3 lg:col-span-1'>
           <CardContent className='p-2 sm:p-4 h-full'>
             <div className='flex flex-row items-center justify-between h-full'>
-              <div className='flex items-center space-x-2'>
+              <div className='flex flex-col sm:flex-row sm:items-center space-x-2'>
 
 
-                <AlertTriangle className='w-6 h-6 text-red-500 flex-shrink-0' />
+                <AlertTriangle className='w-4 h-4 md:w-5 md:h-5 text-red-500 flex-shrink-0' />
                 <p className='text-xs sm:text-sm font-medium text-gray-600 truncate'>
                   Critical
                 </p>
               </div>
-              <p className='text-lg font-bold text-red-500 mt-1'>
+              <p className='text-sm sm:text-lg font-bold text-red-500 mt-1'>
                 {criticalPatients}
               </p>
             </div>
@@ -101,13 +101,13 @@ export function SummaryCards({
         <Card className='h-[80px] sm:h-[80px] col-span-2 sm:col-span-3 lg:col-span-1'>
           <CardContent className='p-2 sm:p-4 h-full'>
             <div className='flex flex-row items-center justify-between h-full'>
-              <div className='flex items-center space-x-2'>
-                <AlertCircle className='w-6 h-6 text-red-700 flex-shrink-0' />
+              <div className='flex flex-col sm:flex-row sm:items-center space-x-2'>
+                <AlertCircle className='w-4 h-4 md:w-5 md:h-5 text-red-700 flex-shrink-0' />
                 <p className='text-xs sm:text-sm font-medium text-gray-600 truncate'>
                   Distressed
                 </p>
               </div>
-              <p className='text-lg font-bold text-red-700 mt-1'>
+              <p className='text-sm sm:text-lg font-bold text-red-700 mt-1'>
                 {distressedPatients}
               </p>
             </div>

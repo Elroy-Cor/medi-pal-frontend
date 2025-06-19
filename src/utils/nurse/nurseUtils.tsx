@@ -104,7 +104,7 @@ export const formatTime = (minutes: number) => {
     return `${hours}h`;
   }
 
-  return `${hours}h ${remainingMinutes} mins`;
+  return `${hours}h ${remainingMinutes}m`;
 };
 
 // Enhanced but simple avgWaitTime calculation

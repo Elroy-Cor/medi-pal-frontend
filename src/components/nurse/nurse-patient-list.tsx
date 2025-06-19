@@ -161,12 +161,12 @@ export function PatientList({ patients }: PatientListProps) {
   )
 
   return (
-    <main className="flex-1 p-6 pt-0">
+    <main className="flex-1 p-3 md:p-6 pt-0">
       <div className="space-y-2">
         <Card className="shadow-md py-4 gap-1">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xl font-semibold flex items-center gap-2">
+              <CardTitle className="md:text-xl font-semibold flex items-center gap-2">
                 <Activity className="h-5 w-5 text-blue-600" />
                 Current Patients
               </CardTitle>

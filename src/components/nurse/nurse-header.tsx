@@ -101,7 +101,7 @@ export const NurseHeader = ({
 
           {/* Essential buttons only */}
           <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-[#234b6c] hover:bg-cyan-800 text-white"
             onClick={() => setTriageModalOpen(true)}
             size="sm"
           >

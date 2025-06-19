@@ -8,6 +8,9 @@ import { PatientList } from "@/components/nurse/nurse-patient-list";
 import { SummaryCards } from "@/components/nurse/nurse-summary-cards";
 import { TriageForm } from "@/components/nurse/triage-form";
 import { getPatientStats, randomizePatients } from "@/utils/nurse/nurseUtils";
+import { FloatingAIButton } from "@/components/nurse/nurse-floating-ai-button";
+// use breakpoint hook to detect screen size
+import { useBreakpoint } from "@/hooks/use-breakpoints";
 // sonner
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
@@ -15,7 +18,6 @@ import { initialPatients } from "@/utils/nurse/initialPatients";
 
 // types
 import { AIChat } from "@/components/nurse/nurse-ai-chat";
-import { FloatingAIButton } from "@/components/nurse/nurse-floating-ai-button";
 import { Patient, Status } from "@/utils/nurse/nurseTypes";
 
 export default function NurseDashboard() {
@@ -26,11 +28,44 @@ export default function NurseDashboard() {
   const stats = getPatientStats(patients);
   const { toast } = useToast();
 
+  const [hasShownMobileToast, setHasShownMobileToast] = useState(false);
+  const currentBreakpoint = useBreakpoint();
+
   const filteredPatients = patients.filter(
     (patient: Patient) =>
       patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       patient.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+    // Mobile breakpoint toast - only show once per session
+    useEffect(() => {
+      if (currentBreakpoint && !hasShownMobileToast) {
+        const isMobile = currentBreakpoint === 'xs' || currentBreakpoint === 'sm';
+        
+        if (isMobile) {
+          toast({
+            title: "📱 Mobile View Detected",
+            description: "For the best experience, consider using a tablet or desktop device to view the full dashboard.",
+            variant: "default",
+            duration: 5000, // Show for 5 seconds
+            className: 'bg-gray-800/90 backdrop-blur-sm  text-white p-4 rounded-lg shadow-lg',
+          });
+          setHasShownMobileToast(true);
+        }
+      }
+    }, [currentBreakpoint, toast, hasShownMobileToast]);
+  
+    // Optional: Reset the toast flag when switching back to larger screens
+    useEffect(() => {
+      if (currentBreakpoint && hasShownMobileToast) {
+        const isDesktop = currentBreakpoint === 'md' || currentBreakpoint === 'lg' || currentBreakpoint === 'xl' || currentBreakpoint === 'xxl';
+        
+        if (isDesktop) {
+          // Reset flag so toast can show again if user switches back to mobile
+          setHasShownMobileToast(false);
+        }
+      }
+    }, [currentBreakpoint, hasShownMobileToast]);
 
   // Separate useEffect for the interval
   useEffect(() => {
@@ -42,6 +77,7 @@ export default function NurseDashboard() {
       clearInterval(randomizePatientsRef);
     };
   }, []);
+
 
   // increment wait time every minute
   useEffect(() => {
@@ -76,7 +112,8 @@ export default function NurseDashboard() {
         title: "⚠️ Distressed Patients Detected",
         description: `There are ${distressedPatients.length} patients showing signs of distress or anger. Please check their status.`,
         variant: "destructive",
-        className: "text-white",
+        className: "text-white p-4",
+
       });
     }
   }, [patients, toast]); // This will run every time patients array changes

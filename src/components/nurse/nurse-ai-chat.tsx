@@ -199,7 +199,7 @@ export function AIChat({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-24 right-6 w-96 h-[600px] bg-white rounded-lg shadow-2xl border border-gray-200 z-40 flex flex-col">
+    <div className="fixed bottom-24 right-6 w-11/12 h-[600px] bg-white rounded-lg shadow-2xl border border-gray-200 z-40 flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-cyan-600 via-teal-800 to-cyan-800 rounded-t-lg">
         <div className="flex items-center justify-between">

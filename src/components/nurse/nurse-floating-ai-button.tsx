@@ -7,13 +7,11 @@ import { cn } from '@/lib/utils';
 interface FloatingAIButtonProps {
   onClick: () => void;
   className?: string;
-  buttonSize?: 'small' | 'medium' | 'large';
 }
 
 export function FloatingAIButton({
   onClick,
   className = '',
-  buttonSize = 'large'
 }: FloatingAIButtonProps) {
   const sizeClasses = {
     small: 'w-12 h-12',
@@ -31,7 +29,7 @@ export function FloatingAIButton({
         {/* Button */}
         <Button
           onClick={onClick}
-          className={`${sizeClasses[buttonSize]} relative z-10 rounded-full bg-gradient-to-br from-emerald-600 via-cyan-600 to-cyan-800 hover:opacity-80 shadow-lg hover:shadow-xl transition-all duration-300 border-0`}
+          className={'w-12 h-12 sm:w-14 sm:h-14 relative z-10 rounded-full bg-gradient-to-br from-emerald-600 via-cyan-600 to-cyan-800 hover:opacity-80 shadow-lg hover:shadow-xl transition-all duration-300 border-0'}
         >
           <MessageCircle className='w-6 h-6 text-white' />
         </Button>
