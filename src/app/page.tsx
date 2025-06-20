@@ -181,7 +181,7 @@ export default function LandingPage() {
               variants={fadeUpStaggerVariants}
               className="bg-white/40 hover:bg-white backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-[0_1px_10px_rgba(52,211,153,0.8)] [transition:box-shadow_0.3s_ease-in-out,color_0.2s_linear,background-color_0.2s_linear]"
             >
-              <p className="text-sm text-slate-600 mb-2">With Reseach from</p>
+              <p className="text-sm text-slate-600 mb-2">With Research from</p>
               <div className="flex flex-col sm:flex-row items-center justify-center space-x-4 sm:space-x-8 text-gray-500">
                 <Image
                   src={sghLogo}
