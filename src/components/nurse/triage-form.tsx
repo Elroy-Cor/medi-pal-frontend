@@ -8,6 +8,8 @@ import {
   Brain,
   ChevronRight,
   Clock,
+  Mic,
+  MicOff,
   Stethoscope,
   User,
   Zap,
@@ -43,6 +45,7 @@ import { PatientSearch } from './nurse-patient-search';
 import { motion } from 'motion/react';
 // toast/sonner
 import { useToast } from '@/hooks/use-toast';
+import { triageSambaNovaService, type TriageFormUpdates } from '@/services/triageSambanova';
 
 export type PatientData = {
   name: string;
@@ -280,10 +283,552 @@ export function TriageForm({
     null
   );
   const [finalPriority, setFinalPriority] = useState<number | null>(null);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [isVoiceListening, setIsVoiceListening] = useState(false);
+  const [isVoiceProcessing, setIsVoiceProcessing] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Add realtime conversation state (similar to chat-page.tsx)
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [connectionState, setConnectionState] = useState("disconnected");
+  const [isAiResponding, setIsAiResponding] = useState(false);
+  
+  // WebRTC refs for OpenAI realtime (simplified - no audio playback)
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const audioStreamRef = useRef<MediaStream | null>(null);
+  const dataChannelRef = useRef<RTCDataChannel | null>(null);
+  const audioTrackRef = useRef<MediaStreamTrack | null>(null);
+  const audioSenderRef = useRef<RTCRtpSender | null>(null);
 
   // Create refs for all form inputs
   const inputRefs = useRef<Record<string, HTMLElement | null>>({});
+  
+  // Voice recognition refs (keep for fallback)
+
+  // Fetch OpenAI session when component mounts
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        console.log("Fetching OpenAI session...");
+        const response = await fetch("/api/session");
+
+        if (!response.ok) {
+          throw new Error(`Session API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Session data:", data);
+
+        if (data.client_secret && data.client_secret.value) {
+          setClientSecret(data.client_secret.value);
+          console.log("Client secret set successfully");
+        } else {
+          throw new Error("No client secret in response");
+        }
+      } catch (error) {
+        console.error("Error fetching session:", error);
+        setVoiceError("Error fetching session: " + (error as Error).message);
+      }
+    };
+
+    fetchSession();
+  }, []);
+
+  // Function to handle OpenAI function calls for updating triage form
+  const handleTriageFunctionCall = async (
+    eventData: {
+      name: string;
+      arguments: string;
+      call_id: string;
+    },
+    dataChannel: RTCDataChannel
+  ) => {
+    console.log("OpenAI wants to call triage function:", eventData);
+
+    try {
+      const parsedArgs = JSON.parse(eventData.arguments);
+      
+      // Handle different triage form update functions
+      switch (eventData.name) {
+        case "update_patient_info":
+          if (parsedArgs.name) setFormData(prev => ({ ...prev, name: parsedArgs.name }));
+          if (parsedArgs.age) setFormData(prev => ({ ...prev, age: parsedArgs.age.toString() }));
+          if (parsedArgs.gender) setFormData(prev => ({ ...prev, gender: parsedArgs.gender }));
+          if (parsedArgs.phone) setFormData(prev => ({ ...prev, phone: parsedArgs.phone }));
+          if (parsedArgs.address) setFormData(prev => ({ ...prev, address: parsedArgs.address }));
+          if (parsedArgs.emergency_contact) setFormData(prev => ({ ...prev, NOK: parsedArgs.emergency_contact }));
+          
+          toast({
+            title: 'Patient Info Updated',
+            description: 'Basic patient information has been filled in.',
+            duration: 3000,
+            className: 'border-2 border-blue-600 bg-blue-100 text-blue-800',
+          });
+          break;
+
+        case "update_symptoms":
+          if (parsedArgs.complaint) setFormData(prev => ({ ...prev, complaint: parsedArgs.complaint }));
+          if (parsedArgs.pain_level !== undefined) setFormData(prev => ({ ...prev, painLevel: parsedArgs.pain_level }));
+          
+          toast({
+            title: 'Symptoms Updated',
+            description: 'Chief complaint and pain level have been recorded.',
+            duration: 3000,
+            className: 'border-2 border-orange-600 bg-orange-100 text-orange-800',
+          });
+          break;
+
+        case "update_vitals":
+          setFormData(prev => ({
+            ...prev,
+            vitals: {
+              ...prev.vitals,
+              ...(parsedArgs.systolic && { systolic: parsedArgs.systolic.toString() }),
+              ...(parsedArgs.diastolic && { diastolic: parsedArgs.diastolic.toString() }),
+              ...(parsedArgs.heart_rate && { heartRate: parsedArgs.heart_rate.toString() }),
+              ...(parsedArgs.temperature && { temperature: parsedArgs.temperature.toString() }),
+              ...(parsedArgs.spo2 && { spo2: parsedArgs.spo2.toString() }),
+            }
+          }));
+          
+          toast({
+            title: 'Vitals Updated',
+            description: 'Vital signs have been recorded.',
+            duration: 3000,
+            className: 'border-2 border-red-600 bg-red-100 text-red-800',
+          });
+          break;
+
+        case "update_medical_history":
+          if (parsedArgs.allergies) setFormData(prev => ({ ...prev, allergies: parsedArgs.allergies }));
+          if (parsedArgs.medications) setFormData(prev => ({ ...prev, medications: parsedArgs.medications }));
+          if (parsedArgs.medical_history) setFormData(prev => ({ ...prev, medicalHistory: parsedArgs.medical_history }));
+          if (parsedArgs.notes) setFormData(prev => ({ ...prev, notes: parsedArgs.notes }));
+          
+          toast({
+            title: 'Medical History Updated',
+            description: 'Medical history and current medications recorded.',
+            duration: 3000,
+            className: 'border-2 border-green-600 bg-green-100 text-green-800',
+          });
+          break;
+
+        default:
+          throw new Error(`Unknown triage function: ${eventData.name}`);
+      }
+
+      // Send success response back to OpenAI
+      dataChannel.send(
+        JSON.stringify({
+          type: "conversation.item.create",
+          item: {
+            type: "function_call_output",
+            call_id: eventData.call_id,
+            output: JSON.stringify({
+              success: true,
+              message: `Successfully updated ${eventData.name.replace(/_/g, ' ')}`
+            }),
+          },
+        })
+      );
+
+      // Tell OpenAI to generate a response
+      dataChannel.send(
+        JSON.stringify({
+          type: "response.create",
+        })
+      );
+
+    } catch (error) {
+      console.error("Triage function call error:", error);
+
+      // Send error back to OpenAI
+      dataChannel.send(
+        JSON.stringify({
+          type: "conversation.item.create",
+          item: {
+            type: "function_call_output",
+            call_id: eventData.call_id,
+            output: JSON.stringify({
+              error: (error as Error).message,
+              success: false,
+            }),
+          },
+        })
+      );
+
+      dataChannel.send(
+        JSON.stringify({
+          type: "response.create",
+        })
+      );
+    }
+  };
+
+  // Voice form update handler
+  const handleFormUpdate = useCallback((updates: TriageFormUpdates) => {
+    console.log('Applying form updates:', updates);
+
+    setFormData((prev) => {
+      const newFormData = { ...prev };
+
+      // Update patient info
+      if (updates.patientInfo) {
+        const info = updates.patientInfo;
+        if (info.name) newFormData.name = info.name;
+        if (info.age) newFormData.age = info.age.toString();
+        if (info.gender) newFormData.gender = info.gender;
+        if (info.phone) newFormData.phone = info.phone;
+        if (info.address) newFormData.address = info.address;
+        if (info.emergencyContact) newFormData.NOK = info.emergencyContact;
+      }
+
+      // Update symptoms
+      if (updates.symptoms) {
+        const symptoms = updates.symptoms;
+        if (symptoms.complaint) newFormData.complaint = symptoms.complaint;
+        if (symptoms.painLevel !== undefined) newFormData.painLevel = symptoms.painLevel;
+      }
+
+      // Update vitals
+      if (updates.vitals) {
+        const vitals = updates.vitals;
+        const newVitals = { ...newFormData.vitals };
+        if (vitals.systolic) newVitals.systolic = vitals.systolic.toString();
+        if (vitals.diastolic) newVitals.diastolic = vitals.diastolic.toString();
+        if (vitals.heartRate) newVitals.heartRate = vitals.heartRate.toString();
+        if (vitals.temperature) newVitals.temperature = vitals.temperature.toString();
+        if (vitals.spo2) newVitals.spo2 = vitals.spo2.toString();
+        newFormData.vitals = newVitals;
+      }
+
+      // Update medical history
+      if (updates.medicalHistory) {
+        const history = updates.medicalHistory;
+        if (history.allergies) newFormData.allergies = history.allergies;
+        if (history.medications) newFormData.medications = history.medications;
+        if (history.medicalHistory) newFormData.medicalHistory = history.medicalHistory;
+        if (history.notes) newFormData.notes = history.notes;
+      }
+
+      return newFormData;
+    });
+
+    // Show success toast
+    toast({
+      title: 'Form Updated',
+      description: 'Voice input has been processed and form fields updated.',
+      duration: 3000,
+      className: 'border-2 border-green-600 bg-gradient-to-tr from-green-700 via-emerald-500 to-teal-700 text-white',
+    });
+  }, [toast]);
+
+  // OpenAI Realtime Conversation Functions
+  const startRealtimeConversation = async () => {
+    console.log("Starting realtime triage conversation...");
+    console.log("Client secret available:", !!clientSecret);
+
+    if (!clientSecret) {
+      toast({
+        title: 'Connection Error',
+        description: 'No client secret available. Please refresh the page.',
+        duration: 5000,
+        className: 'border-2 border-red-600 bg-red-100 text-red-800',
+      });
+      return;
+    }
+
+    setVoiceError(null);
+    setVoiceTranscript('');
+    
+    try {
+      // 1. Get user media
+      console.log("Requesting microphone access...");
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 24000,
+        },
+      });
+      console.log("Got user media stream");
+      audioStreamRef.current = stream;
+
+      // 2. Create PeerConnection
+      const pc = new RTCPeerConnection();
+      peerConnectionRef.current = pc;
+
+      // Monitor connection state
+      pc.onconnectionstatechange = () => {
+        console.log("Connection state changed:", pc.connectionState);
+        setConnectionState(pc.connectionState);
+      };
+
+      // 3. Store audio track reference
+      const audioTrack = stream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrackRef.current = audioTrack;
+        audioSenderRef.current = pc.addTrack(audioTrack, stream);
+        console.log("Audio track stored and added");
+      }
+
+      // 4. Create data channel for realtime events
+      const dataChannel = pc.createDataChannel("oai-events", {
+        ordered: true,
+      });
+      dataChannelRef.current = dataChannel;
+
+      dataChannel.onmessage = async (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log("Received triage event:", data);
+
+          // Handle function calls for triage form updates
+          if (data.type === "response.function_call_arguments.done") {
+            await handleTriageFunctionCall(data, dataChannel);
+            return;
+          }
+
+          // Handle different event types
+          if (data.type === "conversation.item.input_audio_transcription.completed") {
+            setVoiceTranscript(data.transcript);
+            console.log("User said:", data.transcript);
+          }
+
+          // AI processing response (visual feedback only)
+          else if (data.type === "response.audio_transcript.delta" || data.type === "response.text.delta") {
+            if (!isAiResponding) {
+              setIsAiResponding(true);
+              console.log("🤖 AI processing triage input");
+            }
+          }
+
+          // AI finished processing
+          else if (data.type === "response.done") {
+            console.log("✅ AI triage processing completed");
+            setIsAiResponding(false);
+            setVoiceTranscript('');
+          }
+
+          // User speech events
+          else if (data.type === "input_audio_buffer.speech_started") {
+            setIsVoiceListening(true);
+            console.log("✅ User started speaking - triage");
+          }
+          else if (data.type === "input_audio_buffer.speech_stopped") {
+            setIsVoiceListening(false);
+            console.log("User stopped speaking - triage");
+          }
+
+          // Handle errors
+          else if (data.type === "error") {
+            console.error("OpenAI API error:", data);
+            setIsAiResponding(false);
+            setVoiceError(`Error: ${data.error?.message || "Unknown error occurred"}`);
+          }
+        } catch (error) {
+          console.error("Error parsing triage data channel message:", error);
+        }
+      };
+
+      dataChannel.onopen = () => {
+        console.log("Triage data channel opened");
+        // Send session update with triage-specific functions
+        dataChannel.send(
+          JSON.stringify({
+            type: "session.update",
+            session: {
+              input_audio_transcription: {
+                model: "whisper-1",
+                language: "en",
+              },
+              turn_detection: {
+                type: "server_vad",
+                threshold: 0.7,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 800,
+              },
+              input_audio_format: "pcm16",
+              // Note: No audio output needed - focusing on form updates only
+              instructions: `You are a helpful medical triage assistant. Your role is to help nurses collect patient information efficiently and accurately. 
+
+When the user provides information, use the appropriate function to update the triage form:
+- Use update_patient_info for name, age, gender, phone, address, emergency contact
+- Use update_symptoms for chief complaint and pain level
+- Use update_vitals for blood pressure, heart rate, temperature, oxygen saturation  
+- Use update_medical_history for allergies, medications, medical history, notes
+
+Always confirm what information you've recorded and ask for any missing critical information needed for triage assessment.`,
+              tools: [
+                {
+                  type: "function",
+                  name: "update_patient_info",
+                  description: "Update basic patient demographic information",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string", description: "Patient's full name" },
+                      age: { type: "number", description: "Patient's age in years" },
+                      gender: { type: "string", enum: ["Male", "Female", "Other"], description: "Patient's gender" },
+                      phone: { type: "string", description: "Patient's phone number" },
+                      address: { type: "string", description: "Patient's address" },
+                      emergency_contact: { type: "string", description: "Emergency contact name and phone" }
+                    }
+                  }
+                },
+                {
+                  type: "function", 
+                  name: "update_symptoms",
+                  description: "Update patient symptoms and chief complaint",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      complaint: { type: "string", description: "Chief complaint - main reason for visit" },
+                      pain_level: { type: "number", minimum: 0, maximum: 10, description: "Pain level from 0-10" }
+                    }
+                  }
+                },
+                {
+                  type: "function",
+                  name: "update_vitals", 
+                  description: "Update patient vital signs",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      systolic: { type: "number", description: "Systolic blood pressure" },
+                      diastolic: { type: "number", description: "Diastolic blood pressure" },
+                      heart_rate: { type: "number", description: "Heart rate in beats per minute" },
+                      temperature: { type: "number", description: "Temperature in Celsius" },
+                      spo2: { type: "number", description: "Oxygen saturation percentage" }
+                    }
+                  }
+                },
+                {
+                  type: "function",
+                  name: "update_medical_history",
+                  description: "Update medical history and medications",
+                  parameters: {
+                    type: "object", 
+                    properties: {
+                      allergies: { type: "string", description: "Known allergies" },
+                      medications: { type: "string", description: "Current medications" },
+                      medical_history: { type: "string", description: "Relevant medical history" },
+                      notes: { type: "string", description: "Additional notes" }
+                    }
+                  }
+                }
+              ]
+            },
+          })
+        );
+      };
+
+      // Note: Audio playback removed - focusing on form updates only
+
+      // 6. Create offer (no audio receive needed - just voice input for form updates)
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: false,
+        offerToReceiveVideo: false,
+      });
+      await pc.setLocalDescription(offer);
+
+      // 7. POST offer SDP to OpenAI
+      console.log("Sending SDP offer to OpenAI...");
+      const sdpResponse = await fetch(
+        `/api/realtime?model=gpt-4o-realtime-preview-2025-06-03`,
+        {
+          method: "POST",
+          body: offer.sdp,
+          headers: {
+            Authorization: `Bearer ${clientSecret}`,
+            "Content-Type": "application/sdp",
+          },
+        }
+      );
+
+      if (!sdpResponse.ok) {
+        const errorText = await sdpResponse.text();
+        throw new Error(`Failed to signal with OpenAI: ${errorText}`);
+      }
+
+      const answerSDP = await sdpResponse.text();
+      console.log("Received answer SDP from OpenAI");
+
+      // 8. Set remote description
+      await pc.setRemoteDescription({ type: "answer", sdp: answerSDP });
+
+      setIsVoiceListening(false);
+      setIsAiResponding(false);
+      
+      toast({
+        title: 'Voice Triage Connected',
+        description: '🎤 Start speaking to fill out the triage form!',
+        duration: 5000,
+        className: 'border-2 border-green-600 bg-green-100 text-green-800',
+      });
+      
+      console.log("Voice triage mode activated successfully");
+    } catch (err) {
+      console.error("Error in startRealtimeConversation:", err);
+      setVoiceError("Error starting voice mode: " + (err as Error).message);
+      toast({
+        title: 'Voice Connection Failed',
+        description: (err as Error).message,
+        duration: 5000,
+        className: 'border-2 border-red-600 bg-red-100 text-red-800',
+      });
+    }
+  };
+
+  const stopRealtimeConversation = () => {
+    console.log("Stopping realtime triage conversation...");
+
+    // Reset all states
+    setIsVoiceListening(false);
+    setIsAiResponding(false);
+    setVoiceTranscript('');
+    setConnectionState("disconnected");
+
+    // Clear refs
+    audioTrackRef.current = null;
+    audioSenderRef.current = null;
+
+    // Stop audio stream
+    if (audioStreamRef.current) {
+      console.log("Stopping audio tracks...");
+      audioStreamRef.current.getTracks().forEach((track) => {
+        track.stop();
+      });
+      audioStreamRef.current = null;
+    }
+
+    // Close data channel
+    if (dataChannelRef.current) {
+      console.log("Closing data channel...");
+      dataChannelRef.current.close();
+      dataChannelRef.current = null;
+    }
+
+    // Close peer connection
+    if (peerConnectionRef.current) {
+      console.log("Closing peer connection...");
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
+    }
+
+    // Note: Audio player removed - no audio playback needed
+
+    toast({
+      title: 'Voice Triage Disconnected',
+      description: '🔇 Voice mode has been stopped.',
+      duration: 3000,
+      className: 'border-2 border-gray-600 bg-gray-100 text-gray-800',
+    });
+  };
+
+  // Note: Old browser SpeechRecognition functions removed - now using OpenAI Realtime API
 
   // Define the voice simulation sequence
   const voiceSimulationSteps = useMemo(() => [
@@ -428,8 +973,17 @@ export function TriageForm({
     return () => clearTimeout(timer);
   }, [isVoiceActive, voiceSimulationStep, voiceSimulationSteps]);
 
-  // Handle voice triage click
+  // Handle voice triage click - now uses OpenAI realtime conversation
   const handleVoiceTriageClick = () => {
+    if (connectionState === "connected" || isVoiceListening || isAiResponding) {
+      stopRealtimeConversation();
+    } else {
+      startRealtimeConversation();
+    }
+  };
+
+  // Handle voice triage click for simulation (keeping original for demo)
+  const handleVoiceSimulationClick = () => {
     if (!isVoiceActive) {
       setIsVoiceActive(true);
       setVoiceSimulationStep(0);
@@ -444,7 +998,6 @@ export function TriageForm({
         setVoiceSimulationStep(0);
 
         // Show final evaluation toast
-        // toast to show it's done
         toast({
           title: 'AI Triage Completed!',
           description: "Please access the patient's evaluation.",
@@ -669,13 +1222,64 @@ export function TriageForm({
           <div className='relative inline-flex group items-center shadow-none rounded-lg'>
             <div className='absolute z-10 -inset-0.5 opacity-100 bg-gradient-to-r from-emerald-300 via-cyan-300 to-sky-300 rounded-lg blur-sm group-hover:opacity-100 group-hover:-inset-1 group-hover:blur-md transition-all duration-300'></div>
             <Button
-              className={`z-20 bg-gradient-to-br from-emerald-600 via-cyan-600 to-cyan-800 hover:bg-cyan-800 text-white transition-all duration-200 hover:cursor-pointer `}
+              className={`z-20 bg-gradient-to-br from-emerald-600 via-cyan-600 to-cyan-800 hover:bg-cyan-800 text-white transition-all duration-200 hover:cursor-pointer ${
+                !clientSecret ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
               onClick={handleVoiceTriageClick}
+              disabled={!clientSecret}
+            >
+              {(connectionState === "connected" || isVoiceListening || isAiResponding) ? (
+                <div className='flex items-center space-x-1'>
+                  {/* Animated Sound Wave Bars */}
+                  {[...Array(8)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className='bg-white rounded-full'
+                      style={{ width: '3px' }}
+                      initial={{ height: 8 }}
+                      animate={{
+                        height: [8, 12 + Math.sin(i * 0.5) * 8, 8],
+                        opacity: [0.4, 1, 0.4],
+                      }}
+                      transition={{
+                        duration: 0.5 + i * 0.1,
+                        repeat: Infinity,
+                        ease: [0.4, 0, 0.6, 1],
+                        delay: i * 0.1,
+                        repeatType: 'reverse',
+                      }}
+                    />
+                  ))}
+                                  <span className='ml-2 text-sm'>
+                  {isAiResponding ? 'AI Processing...' : isVoiceListening ? 'Listening...' : 'Connected'}
+                </span>
+                </div>
+              ) : (
+                <>
+                  {clientSecret ? (
+                    <Mic className='w-4 h-4 mr-2' />
+                  ) : (
+                    <MicOff className='w-4 h-4 mr-2' />
+                  )}
+                  <span>
+                    {!clientSecret ? 'Loading...' : 'Start Voice Triage'}
+                  </span>
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Demo Voice Simulation Button */}
+          <div className='relative inline-flex group items-center shadow-none rounded-lg'>
+            <div className='absolute z-10 -inset-0.5 opacity-100 bg-gradient-to-r from-purple-300 via-pink-300 to-rose-300 rounded-lg blur-sm group-hover:opacity-100 group-hover:-inset-1 group-hover:blur-md transition-all duration-300'></div>
+            <Button
+              className={`z-20 bg-gradient-to-br from-purple-600 via-pink-600 to-rose-800 hover:bg-rose-800 text-white transition-all duration-200 hover:cursor-pointer `}
+              onClick={handleVoiceSimulationClick}
             >
               {!isVoiceActive ? (
                 <>
                   <Brain className='w-4 h-4 mr-2' />
-                  Voice Triage
+                  Demo Simulation
                 </>
               ) : (
                 <div className='flex items-center space-x-1'>
@@ -703,13 +1307,39 @@ export function TriageForm({
                       }}
                     />
                   ))}
-                  <span className='ml-2 text-sm'>Listening...</span>
+                  <span className='ml-2 text-sm'>Demo Running...</span>
                 </div>
               )}
             </Button>
           </div>
         </div>
       </DialogHeader>
+
+      {/* Voice Transcript Display */}
+      {(isVoiceListening || voiceTranscript) && (
+        <div className='bg-blue-50 border-l-4 border-blue-400 p-4 mx-6 mt-4 rounded-r-lg'>
+          <div className='flex items-start'>
+            <div className='flex items-center'>
+              <Mic className='h-5 w-5 text-blue-400 mr-2' />
+            </div>
+            <div className='flex-1'>
+              <h4 className='text-sm font-medium text-blue-800 mb-1'>
+                Voice Input Status: {isVoiceListening ? 'Listening...' : isVoiceProcessing ? 'Processing...' : 'Ready'}
+              </h4>
+              {voiceTranscript && (
+                <p className='text-sm text-blue-700'>
+                  <strong>Transcript:</strong> {voiceTranscript}
+                </p>
+              )}
+              {isVoiceProcessing && (
+                <p className='text-xs text-blue-600 mt-1 italic'>
+                  AI is analyzing your input and updating the form...
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className='flex-1 p-6 overflow-y-auto'>
         {/* PATIENT INFO */}
@@ -1357,6 +1987,16 @@ export function TriageForm({
           </>
         </Button>
       </div>
+
+      {/* Audio player removed - focusing on visual form updates only */}
     </div>
   );
+}
+
+// Extend the Window interface to include SpeechRecognition
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
 }
