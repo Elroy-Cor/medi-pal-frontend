@@ -212,8 +212,8 @@ export default function LandingPage() {
         </div>
         <p className="mt-10 text-sm text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
           Contact us for a Demo at{" "}
-          <a href="mailto:andre.wong.yz@gmail.com" className="text-cyan-700">
-            andre.wong.yz@gmail.com
+          <a href="mailto:hello@elroyandco.com" className="text-cyan-700">
+            hello@elroyandco.com
           </a>
         </p>
       </motion.section>
