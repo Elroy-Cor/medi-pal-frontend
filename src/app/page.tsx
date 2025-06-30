@@ -11,7 +11,7 @@ import rafflesLogo from "@/public/raffles-logo.png";
 import sghLogo from "@/public/sgh-logo.png";
 import teamPic from "@/public/team-pic.png";
 // page bg
-import { PresentationSlides } from "@/components/main-page/ppt-carousel";
+// import { PresentationSlides } from "@/components/main-page/ppt-carousel";
 import bgImage from "@/public/landing-bg.png";
 import {
   Brain,
@@ -422,7 +422,7 @@ export default function LandingPage() {
       </div>
 
       {/* Presentation Slides Section */}
-      <div className="bg-white">
+      {/* <div className="bg-white">
         <motion.section
           initial="hidden"
           whileInView="visible"
@@ -432,10 +432,10 @@ export default function LandingPage() {
         >
           <PresentationSlides />
         </motion.section>
-      </div>
+      </div> */}
 
       {/* Video section */}
-      <motion.section
+      {/* <motion.section
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
@@ -464,7 +464,7 @@ export default function LandingPage() {
             ></iframe>
           </div>
         </div>
-      </motion.section>
+      </motion.section> */}
 
       {/* CTA Section */}
       <motion.section
@@ -579,11 +579,8 @@ export default function LandingPage() {
             </p>
             <p className="text-sm text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
               Contact us for a Demo at{" "}
-              <a
-                href="mailto:andre.wong.yz@gmail.com"
-                className="text-cyan-700"
-              >
-                andre.wong.yz@gmail.com
+              <a href="mailto:hello@elroyandco.com" className="text-cyan-700">
+                hello@elroyandco.com
               </a>
             </p>
             <p className="text-sm text-gray-500">
