@@ -237,6 +237,10 @@ User Voice Input → WebRTC → OpenAI Realtime API → Function Calls → Backe
 
 The AWS infrastructure files for this project can be found at: [AWS Infrastructure Files](https://github.com/rurumeister/medi-pal-frontend/tree/main/aws_lambda_functions)
 
+### **System Architecture**
+
+![Architecture Diagram](./public/architecture_diagram.png)
+
 ---
 
 ## 🎯 Future Enhancements
