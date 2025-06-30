@@ -1,7 +1,62 @@
-# Serverless AI Lambda Functions – Healthcare Project
+# 🚀 Serverless AI Lambda Functions – Healthcare Project
 
-This repository contains **three focused AWS Lambda micro-services** that together power the AI features in our healthcare prototype.  
+This folder contains **three focused AWS Lambda micro-services** that together power the AI features in our healthcare prototype.  
 Each Lambda is **self-contained** (own prompt, bucket, IAM scope, timeout), making it easy to tune performance, cost, and security per use-case.
+
+---
+
+## 💡 Overview
+
+This project solves the challenge of **automating insurance document verification and medical record summarization**, making patient interactions faster and more accurate. Using AWS Lambda as the core compute service, the application delivers a fully scalable, event-driven architecture and integrates seamlessly with API Gateway, Amazon S3, and Amazon ECR.
+
+---
+
+## ⚙️ Architecture
+
+![Architecture Diagram](link-to-diagram-or-local-diagram.png)
+
+### Components
+
+- **AWS Lambda**: Core compute engine for AI-based processing.
+- **Amazon API Gateway**: Provides a secure HTTP API entry point, triggers Lambda on demand.
+- **Amazon ECR**: Stores Docker container images for Lambda, allowing custom dependencies.
+- **Amazon S3**: Object storage for parsed documents and reports.
+- **Amazon EventBridge** (optional): Event-based or scheduled Lambda invocations.
+
+---
+
+## 🟢 How it works
+
+1️⃣ **API Request**  
+A user or system makes an HTTP request to API Gateway.
+
+2️⃣ **Trigger Lambda**  
+API Gateway triggers the appropriate Lambda function running as a container from ECR.
+
+3️⃣ **Lambda Processing**  
+Lambda:
+- Reads question from request payload.
+- Fetches or processes documents stored in Amazon S3.
+- Uses AI model (via SambaNova or OpenAI) to generate a concise answer.
+
+4️⃣ **S3 Handling**  
+Documents are uploaded to and retrieved from S3. Lambda reads these for context, then optionally writes back processed results.
+
+5️⃣ **Return Response**  
+Lambda returns a JSON response to API Gateway, which sends it to the client.
+
+6️⃣ **Optional EventBridge**  
+Used for periodic updates or batch tasks.
+
+---
+
+## ✅ AWS Services Used
+
+- **AWS Lambda**: Core compute, runs all AI logic.
+- **Amazon API Gateway**: HTTP API endpoint and trigger.
+- **Amazon ECR**: Container image repository for Lambda.
+- **Amazon S3**: Document storage.
+- **Amazon EventBridge** (optional).
 
 ---
 
@@ -74,4 +129,3 @@ Each Lambda is **self-contained** (own prompt, bucket, IAM scope, timeout), maki
    RUN pip install openai
    COPY lambda_function.py .
    CMD ["lambda_function.lambda_handler"]
-
